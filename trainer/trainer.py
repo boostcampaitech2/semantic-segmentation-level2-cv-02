@@ -53,7 +53,7 @@ class Trainer(BaseTrainer):
             data, target = data.to(self.device), target.to(self.device)
 
             # inference
-            output = self.model(data)['out']
+            output = self.model(data)
 
             # loss
             loss = self.criterion(output, target)
@@ -113,7 +113,7 @@ class Trainer(BaseTrainer):
                 target = torch.stack(target).long()
                 data, target = data.to(self.device), target.to(self.device)
 
-                output = self.model(data)['out']
+                output = self.model(data)
                 loss = self.criterion(output, target)
 
                 total_loss += loss
