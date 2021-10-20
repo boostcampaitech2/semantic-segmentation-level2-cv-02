@@ -12,7 +12,7 @@ class BasicModel(nn.Module):
         self.model.classifier[4] = nn.Conv2d(512, num_classes, kernel_size=1)
         self.model.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
     def forward(self, x):
-        return self.model(x)
+        return self.model(x)['out']
 
 class BasicModel2(nn.Module):
     def __init__(self, num_classes=11):
@@ -23,5 +23,5 @@ class BasicModel2(nn.Module):
     
     
     def forward(self, x):
-        return self.model(x)
+        return self.model(x)['out']
 
