@@ -41,10 +41,10 @@ class Trainer(BaseTrainer):
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
         self.train_metrics = MetricTracker(
-            *["loss", "acc", "mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
+            *["train/loss", "train/acc", "train/mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
         )
         self.valid_metrics = MetricTracker(
-            *["loss", "acc", "mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
+            *["valid/loss", "valid/acc", "valid/mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
         )
 
     def _train_epoch(self, epoch):
@@ -84,9 +84,9 @@ class Trainer(BaseTrainer):
             hist = add_hist(hist, target, output, n_class=n_class)
             acc, acc_cls, mIoU, fwavacc, IoU = label_accuracy_score(hist)
 
-            self.train_metrics.update("loss", loss.item())
-            self.train_metrics.update("acc", acc)
-            self.train_metrics.update("mIoU", mIoU)
+            self.train_metrics.update("train/loss", loss.item())
+            self.train_metrics.update("train/acc", acc)
+            self.train_metrics.update("train/mIoU", mIoU)
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
 
@@ -102,7 +102,7 @@ class Trainer(BaseTrainer):
         log = self.train_metrics.result()
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
-            log.update(**{"val_" + k: v for k, v in val_log.items()})
+            log.update(**{k: v for k, v in val_log.items()})
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
         return log
@@ -143,9 +143,9 @@ class Trainer(BaseTrainer):
             acc, acc_cls, mIoU, fwavacc, IoU = label_accuracy_score(hist)
             avrg_loss = total_loss / cnt
 
-            self.valid_metrics.update("acc", acc)
-            self.valid_metrics.update("mIoU", mIoU)
-            self.valid_metrics.update("loss", avrg_loss.item())
+            self.valid_metrics.update("valid/acc", acc)
+            self.valid_metrics.update("valid/mIoU", mIoU)
+            self.valid_metrics.update("valid/loss", avrg_loss.item())
 
             print(
                 f"Validation #{epoch}  Average Loss: {round(avrg_loss.item(), 4)}, Accuracy : {round(acc, 4)}, mIoU: {round(mIoU, 4)}"
