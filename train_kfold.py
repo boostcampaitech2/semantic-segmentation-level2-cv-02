@@ -74,7 +74,12 @@ if __name__ == "__main__":
     args.add_argument("-r", "--resume", default=None, type=str, help="path to latest checkpoint (default: None)")
     args.add_argument("-d", "--device", default=None, type=str, help="indices of GPUs to enable (default: all)")
     args.add_argument("-tf", "--train-fold", type=str, nargs="+", help="path to train_kfold")
-    args.add_argument("-vf", "--valid-fold", type=str, nargs="+", )
+    args.add_argument(
+        "-vf",
+        "--valid-fold",
+        type=str,
+        nargs="+",
+    )
     args.add_argument(
         "--no-validate", action="store_true", help="whether not to evaluate the checkpoint during training"
     )
@@ -92,10 +97,10 @@ if __name__ == "__main__":
     ]
 
     config = ConfigParser.from_args(args, options)
-    save_dir = str(config.save_dir) # 완료된 실험을 저장하는 경로
+    save_dir = str(config.save_dir)  # 완료된 실험을 저장하는 경로
     log_dir = str(config.log_dir)
-    fold = config["kfold"]["cnt"]   # 폴드의 개수
-    for i in range(1, fold+1):
-        print("="*10, f"Fold {i}", "="*10)
+    fold = config["kfold"]["cnt"]  # 폴드의 개수
+    for i in range(1, fold + 1):
+        print("=" * 10, f"Fold {i}", "=" * 10)
         config = change_fold(config, fold, save_dir, log_dir)
         main(config)
