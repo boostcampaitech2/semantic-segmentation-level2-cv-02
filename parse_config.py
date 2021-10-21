@@ -95,14 +95,8 @@ class ConfigParser:
         assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
     
         # DataLoader에 대한 처리
-        if "dataset" in module_args:
-            arg_name = module_args["dataset"]["type"]
-            arg_args = dict(module_args["dataset"]["args"])
-            if "transform" in arg_args:
-                arg2_name = arg_args["transform"]["type"]
-                arg2_args = arg_args["transform"]["args"]
-                arg_args["transform"] = getattr(Transforms, arg2_name)(*args, **arg2_args)
-            module_args["dataset"] = getattr(Datasets, arg_name)(*args, **arg_args)
+        if "data_loader" in name:
+            module_args["dataset"] = self._get_dataset(module_args, *args, **kwargs)
         
         module_args.update(kwargs)
         return getattr(module, module_name)(*args, **module_args)
@@ -132,6 +126,18 @@ class ConfigParser:
         logger = logging.getLogger(name)
         logger.setLevel(self.log_levels[verbosity])
         return logger
+
+    def _get_dataset(self, module_args, *args, **kwargs):
+        arg_name = module_args["dataset"]["type"]
+        arg_args = dict(module_args["dataset"]["args"])
+        if "transform" in arg_args:
+            arg_args["transform"] = self._get_transform(arg_args, *args, **kwargs)
+        return getattr(Datasets, arg_name)(*args, **arg_args)
+
+    def _get_transform(self, module_args, *args, **kwargs):        
+        arg_name = module_args["transform"]["type"]
+        arg_args = dict(module_args["transform"]["args"])
+        return getattr(Transforms, arg_name)(*args, **arg_args)
 
     # setting read-only attributes
     @property
