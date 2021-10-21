@@ -53,12 +53,6 @@ class Wandb:
         :param log: {'epoch': 1, 'loss': 0.74, 'acc': 0.744, 'mIoU': 0.14, 'val_loss': 0.61, 'val_acc': 0.82, 'val_mIoU': 0.168}
         """
         del log["epoch"]
-        log["train/train_loss"] = log.pop("loss")
-        log["train/train_acc"] = log.pop("acc")
-        log["train/train_mIoU"] = log.pop("mIoU")
-        log["valid/val_loss"] = log.pop("val_loss")
-        log["valid/val_acc"] = log.pop("val_acc")
-        log["valid/val_mIoU"] = log.pop("val_mIoU")
 
         wandb.log(log)
 

@@ -1,7 +1,7 @@
 {
     "name": "Segmentation",
     "n_gpu": 1,
-    "arch": {"type": "BasicModel2", "args": {"num_classes": 11}},
+    "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
     "data_loader": {
         "type": "BasicDataLoader",
         "args": {
@@ -14,9 +14,9 @@
                     "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
-            "batch_size": 8,
+            "batch_size": 16,
             "shuffle": true,
-            "num_workers": 4
+            "num_workers": 6
         }
     },
     "valid_data_loader": {
@@ -31,9 +31,9 @@
                     "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
-            "batch_size": 8,
+            "batch_size": 16,
             "shuffle": false,
-            "num_workers": 4
+            "num_workers": 6
         }
     },
     "test_data_loader": {
@@ -58,11 +58,11 @@
     "metrics": [],
     "lr_scheduler": {"type": "CosineAnnealingLR", "args": {"T_max": 10, "eta_min": 0.001}},
     "trainer": {
-        "epochs": 100,
+        "epochs": 2,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
-        "monitor": "max val_mIoU",
+        "monitor": "max valid/mIoU",
         "early_stop": 10,
         "tensorboard": false
     },
