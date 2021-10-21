@@ -57,10 +57,10 @@ def make_train_df(save_root, data_root, ann):
 
     with open(data_root + ann, "rt", encoding="UTF-8") as annotations:
         coco = json.load(annotations)
-        # info = coco['info']
-        # licenses = coco['licenses']
-        # images = coco['images']
-        # categories = coco['categories']
+        info = coco["info"]
+        licenses = coco["licenses"]
+        images = coco["images"]
+        categories = coco["categories"]
         annotations = coco["annotations"]
 
         for ann in annotations:
@@ -69,15 +69,18 @@ def make_train_df(save_root, data_root, ann):
             dd["category_id"].append(ann["category_id"])
             dd["category_name"].append(classes[ann["category_id"]])
             dd["segmentation"].append(ann["segmentation"])
-            dd["xmin"].append(ann["bbox"][0])
-            dd["ymin"].append(ann["bbox"][1])
-            dd["xmax"].append(ann["bbox"][2])
-            dd["ymax"].append(ann["bbox"][3])
+            dd["area"].append(ann["area"])
+            dd["bbox"].append(ann["bbox"])
+            dd["iscrowd"].append(ann["iscrowd"])
+            # dd["xmin"].append(ann["bbox"][0])
+            # dd["ymin"].append(ann["bbox"][1])
+            # dd["xmax"].append(ann["bbox"][2])
+            # dd["ymax"].append(ann["bbox"][3])
 
         print(len(dd["id"]))
         trdf = pd.DataFrame(dd)
-        trdf.to_csv(save_root + "/train_original2.csv")
-        print(f"saved {save_root}/train_original2.csv")
+        trdf.to_csv(save_root + "/train_original3.csv")
+        print(f"saved {save_root}/train_original3.csv")
         return trdf
 
 
@@ -147,12 +150,12 @@ def save_coco(file, info, licenses, images, annotations, categories):
                 "info": info,
                 "licenses": licenses,
                 "images": images,
-                "annotations": annotations,
                 "categories": categories,
+                "annotations": annotations,
             },
             coco,
-            indent=2,
-            sort_keys=True,
+            indent=4,
+            # sort_keys=True,
         )
 
 
@@ -183,10 +186,11 @@ def main(args, dev_ind, val_ind):
         info = coco["info"]
         licenses = coco["licenses"]
         images = coco["images"]
-        annotations = coco["annotations"]
         categories = coco["categories"]
+        annotations = coco["annotations"]
 
         number_of_images = len(images)
+        print("num_images : ", number_of_images)
 
         images_with_annotations = funcy.lmap(lambda a: int(a["image_id"]), annotations)
 
