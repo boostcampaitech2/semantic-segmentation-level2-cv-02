@@ -2,6 +2,12 @@
     "name": "Segmentation",
     "n_gpu": 1,
     "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
+    "kfold": {
+        "flag": true,
+        "cnt": 5,
+        "train_fold": "../input/data/train_fold.json", 
+        "valid_fold": "../input/data/val_fold.json"        
+    },
     "data_loader": {
         "type": "BasicDataLoader",
         "args": {
@@ -9,7 +15,7 @@
                 "type": "BasicDataset",
                 "args": {
                     "data_dir": "../input/data",
-                    "ann_file": "../input/data/train.json",
+                    "ann_file": "../input/data/train_fold1.json",
                     "mode": "train",
                     "transform": {"type": "BasicTransform", "args": {}}
                 }
@@ -58,7 +64,7 @@
     "metrics": [],
     "lr_scheduler": {"type": "CosineAnnealingLR", "args": {"T_max": 10, "eta_min": 0.001}},
     "trainer": {
-        "epochs": 2,
+        "epochs": 1,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
