@@ -18,6 +18,9 @@ parser.add_argument("--test", type=str, default=f"/val_fold{0}.json", help="Wher
 parser.add_argument(
     "--split", dest="split", default=0.9, type=float, help="A percentage of a split; a number in (0, 1)"
 )
+parser.add_argument("--fold", type=int, default=5, help="the num of K")
+parser.add_argument("--seed", type=int, default=123, help="seed")
+
 parser.add_argument(
     "--having-annotations",
     default=True,
@@ -208,10 +211,10 @@ if __name__ == "__main__":
     train_x = trdf.copy()
     train_y = train_x["category_id"].values
     groups = train_x["image_id"].values
-    seed = 123
-    k = 3
+    seed = args.seed
+    k = args.fold
 
-    for fold_ind, (dev_ind, val_ind) in enumerate(stratified_group_k_fold(train_x, train_y, groups, k), 1):
+    for fold_ind, (dev_ind, val_ind) in enumerate(stratified_group_k_fold(train_x, train_y, groups, k, seed), 1):
         dev_y, val_y = train_y[dev_ind], train_y[val_ind]
         dev_groups, val_groups = groups[dev_ind], groups[val_ind]
 
