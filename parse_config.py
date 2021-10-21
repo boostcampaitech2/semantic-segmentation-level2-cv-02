@@ -151,6 +151,7 @@ class ConfigParser:
     @save_dir.setter
     def save_dir(self, value): #setter
         self._save_dir = value
+        self.save_dir.mkdir(parents=True, exist_ok=True)
 
     @property
     def log_dir(self):
@@ -159,7 +160,8 @@ class ConfigParser:
     @log_dir.setter
     def log_dir(self, value): #setter
         self._log_dir = value
-        
+        self.log_dir.mkdir(parents=True, exist_ok=True)
+
 # helper functions to update config dict with custom cli options
 def _update_config(config, modification):
     if modification is None:
@@ -185,14 +187,19 @@ def _get_by_path(tree, keys):
     """Access a nested object in tree by sequence of keys."""
     return reduce(getitem, keys, tree)
 
-def change_fold(config, fold):
+def change_fold(config, fold, save_dir=None, log_dir=None):
     """현재 fold에 따라 annotation file 경로 수정"""
-
     # kfold를 진행하지 않을 경우 에러 발생
     assert config["kfold"]["flag"] is True
+    if save_dir is not None:
+        config.save_dir = Path(os.path.join(save_dir, f"fold{fold}"))
+    if log_dir is not None:
+        config.log_dir = Path(os.path.join(log_dir, f"fold{fold}"))
+     
     ann_train = config["kfold"]["train_fold"][:-5] + str(fold) + config["kfold"]["train_fold"][-5:]
     ann_valid = config["kfold"]["valid_fold"][:-5] + str(fold) + config["kfold"]["valid_fold"][-5:]
-        
-    config["data_loader"]["args"]["dataset"]["args"]["ann_file"] = ann_train
-    config["valid_data_loader"]["args"]["dataset"]["args"]["ann_file"] = ann_valid
-    return config
+    modification = {
+        "data_loader;args;dataset;args;ann_file": ann_train,
+        "valid_data_loader;args;dataset;args;ann_file": ann_valid,
+    }
+    return _update_config(config, modification)

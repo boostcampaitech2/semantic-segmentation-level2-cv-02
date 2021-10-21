@@ -6,7 +6,7 @@ import data_loader.data_loaders as module_data
 import loss as module_loss
 import model.metric as module_metric
 import model as module_arch
-from parse_config import ConfigParser, change_fold
+from parse_config import ConfigParser, change_fold, _update_config
 from trainer import Trainer
 from utils import prepare_device
 import os
@@ -96,8 +96,6 @@ if __name__ == "__main__":
     log_dir = str(config.log_dir)
     fold = config["kfold"]["cnt"]   # 폴드의 개수
     for i in range(1, fold+1):
-        print("-"*10, f"Fold {i}", "="*10)
-        config = change_fold(config, fold)
-        config.save_dir = Path(os.path.join(save_dir, f"fold{i}"))
-        config.log_dir = Path(os.path.join(log_dir, f"fold{i}"))
+        print("="*10, f"Fold {i}", "="*10)
+        config = change_fold(config, fold, save_dir, log_dir)
         main(config)
