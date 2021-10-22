@@ -1,27 +1,17 @@
 {
     "name": "Segmentation",
     "n_gpu": 1,
-
-    "arch": {
-        "type": "BasicModel",
-        "args": {
-            "num_classes": 11
-        }
-    },
-
+    "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
     "data_loader": {
         "type": "BasicDataLoader",
-        "args":{
+        "args": {
             "dataset": {
                 "type": "BasicDataset",
                 "args": {
                     "data_dir": "../input/data",
                     "ann_file": "../input/data/train.json",
                     "mode": "train",
-                    "transform": {
-                        "type": "BasicTransform",
-                        "args": {}
-                    }            
+                    "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
             "batch_size": 16,
@@ -29,20 +19,16 @@
             "num_workers": 6
         }
     },
-
-    "valid_data_loader":  {
+    "valid_data_loader": {
         "type": "BasicDataLoader",
-        "args":{
+        "args": {
             "dataset": {
                 "type": "BasicDataset",
                 "args": {
                     "data_dir": "../input/data",
                     "ann_file": "../input/data/val.json",
                     "mode": "val",
-                    "transform": {
-                        "type": "BasicTransform",
-                        "args": {}
-                    }            
+                    "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
             "batch_size": 16,
@@ -50,20 +36,16 @@
             "num_workers": 6
         }
     },
-
-    "test_data_loader":  {
+    "test_data_loader": {
         "type": "BasicDataLoader",
-        "args":{
+        "args": {
             "dataset": {
                 "type": "BasicDataset",
                 "args": {
                     "data_dir": "../input/data",
                     "ann_file": "../input/data/test.json",
                     "mode": "test",
-                    "transform": {
-                        "type": "BasicTransform",
-                        "args": {}
-                    }            
+                    "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
             "batch_size": 16,
@@ -71,37 +53,23 @@
             "num_workers": 6
         }
     },
-
-    "optimizer": {
-        "type": "Adam",
-        "args":{
-            "lr": 0.001,
-            "weight_decay": 0,
-            "amsgrad": true
-        }
-    },
-
+    "optimizer": {"type": "Adam", "args": {"lr": 0.001, "weight_decay": 0, "amsgrad": true}},
     "loss": "CrossEntropyLoss",
-
     "metrics": [],
-
-    "lr_scheduler": {
-        "type": "CosineAnnealingLR",
-        "args": {
-            "T_max": 10,
-            "eta_min": 0.001
-        }
-    },
+    "lr_scheduler": {"type": "CosineAnnealingLR", "args": {"T_max": 10, "eta_min": 0.001}},
     "trainer": {
-        "epochs": 100,
-
+        "epochs": 2,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
-        
-        "monitor": "max val_mIoU",
+        "monitor": "max valid/mIoU",
         "early_stop": 10,
-
         "tensorboard": false
+    },
+    "wandb": {
+        "env_path": "./.env",
+        "entity": "boostcamp-2th-cv-02team",
+        "project": "semantic-segmentation-recycling-trash",
+        "unique_tag": ""
     }
 }
