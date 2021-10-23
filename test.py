@@ -1,81 +1,89 @@
-import argparse
+from parse_config import ConfigParser
 import torch
 from tqdm import tqdm
 import data_loader.data_loaders as module_data
-import model.loss as module_loss
-import model.metric as module_metric
-import model.model as module_arch
-from parse_config import ConfigParser
+import data_loader.datasets as ds
+import model as module_arch
+import argparse
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+import os
 
 
 def main(config):
-    logger = config.get_logger('test')
+    logger = config.get_logger("test")
 
     # setup data_loader instances
-    data_loader = getattr(module_data, config['data_loader']['type'])(
-        config['data_loader']['args']['data_dir'],
-        batch_size=512,
-        shuffle=False,
-        validation_split=0.0,
-        training=False,
-        num_workers=2
-    )
+    test_path = "/opt/ml/segmentation/input/data/test.json"
 
-    # build model architecture
-    model = config.init_obj('arch', module_arch)
+    def collate_fn(batch):
+        return tuple(zip(*batch))
+
+    test_transform = A.Compose([ToTensorV2()])
+    test_dataset = ds.BasicDataset(data_dir=test_path, ann_file=None, mode="test", transform=test_transform)
+    data_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=32, num_workers=4, collate_fn=collate_fn)
+
+    # build model architecture, then print to console
+    model = config.init_obj("arch", module_arch)
     logger.info(model)
 
-    # get function handles of loss and metrics
-    loss_fn = getattr(module_loss, config['loss'])
-    metric_fns = [getattr(module_metric, met) for met in config['metrics']]
-
-    logger.info('Loading checkpoint: {} ...'.format(config.resume))
+    logger.info("Loading checkpoint: {} ...".format(config.resume))
     checkpoint = torch.load(config.resume)
-    state_dict = checkpoint['state_dict']
-    if config['n_gpu'] > 1:
+    state_dict = checkpoint["state_dict"]
+    if config["n_gpu"] > 1:
         model = torch.nn.DataParallel(model)
     model.load_state_dict(state_dict)
 
     # prepare model for testing
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     model.eval()
 
     total_loss = 0.0
     total_metrics = torch.zeros(len(metric_fns))
 
+    # sample_submisson.csv 열기
+    submission = pd.read_csv("./sample_submission.csv", index_col=None)
+
+    # test set에 대한 prediction
+    size = 256
+    transform = A.Compose([A.Resize(size, size)])
+    print("Start prediction.")
+
+    file_name_list = []
+    preds_array = np.empty((0, size * size), dtype=np.long)
+
     with torch.no_grad():
-        for i, (data, target) in enumerate(tqdm(data_loader)):
-            data, target = data.to(device), target.to(device)
-            output = model(data)
+        for i, (data, info) in enumerate(tqdm(data_loader)):
+            output = model(torch.stack(data).to(device))["out"]
+            oms = torch.argmax(output.squeeze(), dim=1).detach().cpu().numpy()
+            temp_mask = []
+            for d, mask in zip(np.stack(data), oms):
+                transformed = transform(image=d, mask=mask)
+                mask = transformed["mask"]
+                temp_mask.append(mask)
+            oms = np.array(temp_mask)
+            oms = oms.reshape([oms.shape[0], size * size]).astype(int)
+            preds_array = np.vstack((preds_array, oms))
 
-            #
-            # save sample images, or do something with output here
-            #
+            file_name_list.append([i["file_name"] for i in image_infos])
 
-            # computing loss, metrics on test set
-            loss = loss_fn(output, target)
-            batch_size = data.shape[0]
-            total_loss += loss.item() * batch_size
-            for i, metric in enumerate(metric_fns):
-                total_metrics[i] += metric(output, target) * batch_size
+    file_names = [y for x in file_name_list for y in x]
+    # PredictionString 대입
+    for file_name, string in zip(file_names, preds_array):
+        submission = submission.append(
+            {"image_id": file_name, "PredictionString": " ".join(str(e) for e in string.tolist())}, ignore_index=True
+        )
 
-    n_samples = len(data_loader.sampler)
-    log = {'loss': total_loss / n_samples}
-    log.update({
-        met.__name__: total_metrics[i].item() / n_samples for i, met in enumerate(metric_fns)
-    })
-    logger.info(log)
+    # submission.csv로 저장
+    submission.to_csv("./submission/" + os.path.basename(config.resume) + ".csv", index=False)
 
 
-if __name__ == '__main__':
-    args = argparse.ArgumentParser(description='PyTorch Template')
-    args.add_argument('-c', '--config', default=None, type=str,
-                      help='config file path (default: None)')
-    args.add_argument('-r', '--resume', default=None, type=str,
-                      help='path to latest checkpoint (default: None)')
-    args.add_argument('-d', '--device', default=None, type=str,
-                      help='indices of GPUs to enable (default: all)')
+if __name__ == "__main__":
+    args = argparse.ArgumentParser(description="PyTorch Template")
+    args.add_argument("-c", "--config", default=None, type=str, help="config file path (default: None)")
+    args.add_argument("-r", "--resume", default=None, type=str, help="path to latest checkpoint (default: None)")
+    args.add_argument("-d", "--device", default=None, type=str, help="indices of GPUs to enable (default: all)")
 
     config = ConfigParser.from_args(args)
     main(config)

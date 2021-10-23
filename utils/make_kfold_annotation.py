@@ -15,9 +15,9 @@ parser.add_argument(
     "--train", type=str, default=f"/train_fold{0}.json", help="Where to store COCO training annotations"
 )
 parser.add_argument("--test", type=str, default=f"/val_fold{0}.json", help="Where to store COCO test annotations")
-parser.add_argument(
-    "--split", dest="split", default=0.9, type=float, help="A percentage of a split; a number in (0, 1)"
-)
+# parser.add_argument(
+#     "--split", dest="split", default=0.9, type=float, help="A percentage of a split; a number in (0, 1)"
+# )
 parser.add_argument("--fold", type=int, default=5, help="the num of K")
 parser.add_argument("--seed", type=int, default=123, help="seed")
 
@@ -55,12 +55,12 @@ def make_train_df(save_root, data_root, ann):
         "Clothing",
     ]
 
-    with open(data_root + ann, "rt", encoding="UTF-8") as annotations:
-        coco = json.load(annotations)
-        # info = coco['info']
-        # licenses = coco['licenses']
-        # images = coco['images']
-        # categories = coco['categories']
+    with open(data_root + ann, "rt", encoding="UTF-8") as anno:
+        coco = json.load(anno)
+        info = coco["info"]
+        licenses = coco["licenses"]
+        images = coco["images"]
+        categories = coco["categories"]
         annotations = coco["annotations"]
 
         for ann in annotations:
@@ -69,15 +69,18 @@ def make_train_df(save_root, data_root, ann):
             dd["category_id"].append(ann["category_id"])
             dd["category_name"].append(classes[ann["category_id"]])
             dd["segmentation"].append(ann["segmentation"])
-            dd["xmin"].append(ann["bbox"][0])
-            dd["ymin"].append(ann["bbox"][1])
-            dd["xmax"].append(ann["bbox"][2])
-            dd["ymax"].append(ann["bbox"][3])
+            dd["area"].append(ann["area"])
+            dd["bbox"].append(ann["bbox"])
+            dd["iscrowd"].append(ann["iscrowd"])
+            # dd["xmin"].append(ann["bbox"][0])
+            # dd["ymin"].append(ann["bbox"][1])
+            # dd["xmax"].append(ann["bbox"][2])
+            # dd["ymax"].append(ann["bbox"][3])
 
         print(len(dd["id"]))
         trdf = pd.DataFrame(dd)
-        trdf.to_csv(save_root + "/train_original2.csv")
-        print(f"saved {save_root}/train_original2.csv")
+        trdf.to_csv(save_root + "/train_original3.csv")
+        print(f"saved {save_root}/train_original3.csv")
         return trdf
 
 
@@ -147,12 +150,12 @@ def save_coco(file, info, licenses, images, annotations, categories):
                 "info": info,
                 "licenses": licenses,
                 "images": images,
-                "annotations": annotations,
                 "categories": categories,
+                "annotations": annotations,
             },
             coco,
-            indent=2,
-            sort_keys=True,
+            indent=4,
+            # sort_keys=True,
         )
 
 
@@ -177,16 +180,43 @@ def train_test_split(images, dev_ind, val_ind):
     return x, y
 
 
+def change_annotations_idx(output_file):
+    with open(output_file, "rt", encoding="UTF-8") as anno:
+        coco = json.load(anno)
+        info = coco["info"]
+        licenses = coco["licenses"]
+        images = coco["images"]
+        categories = coco["categories"]
+        annotations = coco["annotations"]
+
+        num_of_images = len(images)
+        num_of_annotations = len(annotations)
+
+        for i in range(num_of_images):
+            img_id = images[i]["id"]
+            images[i]["id"] = i
+
+            for j in range(num_of_annotations):
+                if img_id == annotations[j]["image_id"]:
+                    annotations[j]["image_id"] = i
+
+        for i in range(num_of_annotations):
+            annotations[i]["id"] = i
+
+        save_coco(output_file, info, licenses, images, annotations, categories)
+
+
 def main(args, dev_ind, val_ind):
     with open(args.data_root + args.annotations, "rt", encoding="UTF-8") as annotations:
         coco = json.load(annotations)
         info = coco["info"]
         licenses = coco["licenses"]
         images = coco["images"]
-        annotations = coco["annotations"]
         categories = coco["categories"]
+        annotations = coco["annotations"]
 
         number_of_images = len(images)
+        print("num_images : ", number_of_images)
 
         images_with_annotations = funcy.lmap(lambda a: int(a["image_id"]), annotations)
 
@@ -197,6 +227,9 @@ def main(args, dev_ind, val_ind):
 
         save_coco(args.data_root + args.train, info, licenses, x, filter_annotations(annotations, x), categories)
         save_coco(args.data_root + args.val, info, licenses, y, filter_annotations(annotations, y), categories)
+
+        change_annotations_idx(args.data_root + args.train)
+        change_annotations_idx(args.data_root + args.val)
 
         print(
             "Saved {} entries in {} and {} in {}".format(
