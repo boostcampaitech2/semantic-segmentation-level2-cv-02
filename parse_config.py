@@ -24,18 +24,18 @@ class ConfigParser:
         # load config file and apply modification
         self._config = _update_config(config, modification)
         self.resume = resume
-
+        self.run_id = run_id
         # set save_dir where trained model and log will be saved.
         save_dir = Path(self.config["trainer"]["save_dir"])
 
         exper_name = self.config["name"]
-        if run_id is None:  # use timestamp as default run-id
-            run_id = datetime.now().strftime(r"%m%d_%H%M%S")
-        self._save_dir = save_dir / "models" / exper_name / run_id
-        self._log_dir = save_dir / "log" / exper_name / run_id
+        if self.run_id is None:  # use timestamp as default run-id
+            self.run_id = datetime.now().strftime(r"%m%d_%H%M%S")
+        self._save_dir = save_dir / "models" / exper_name / self.run_id
+        self._log_dir = save_dir / "log" / exper_name / self.run_id
 
         # make directory for saving checkpoints and log.
-        exist_ok = run_id == ""
+        exist_ok = self.run_id == ""
         self.save_dir.mkdir(parents=True, exist_ok=exist_ok)
         self.log_dir.mkdir(parents=True, exist_ok=exist_ok)
 
@@ -62,6 +62,8 @@ class ConfigParser:
         if args.resume is not None:
             resume = Path(args.resume)
             cfg_fname = resume.parent / "config.json"
+            if args.config:
+                cfg_fname = Path(args.config)
         else:
             msg_no_cfg = "Configuration file need to be specified. Add '-c config.json', for example."
             assert args.config is not None, msg_no_cfg
@@ -69,9 +71,6 @@ class ConfigParser:
             cfg_fname = Path(args.config)
 
         config = read_json(cfg_fname)
-        if args.config and resume:
-            # update new config for fine-tuning
-            config.update(read_json(args.config))
 
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
@@ -148,6 +147,10 @@ class ConfigParser:
     @property
     def log_dir(self):
         return self._log_dir
+
+    @property
+    def get_run_id(self):
+        return self.run_id
 
 
 # helper functions to update config dict with custom cli options
