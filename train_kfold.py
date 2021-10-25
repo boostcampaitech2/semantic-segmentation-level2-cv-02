@@ -69,13 +69,6 @@ if __name__ == "__main__":
     args.add_argument("-c", "--config", default="config.json", type=str, help="config file path (default: None)")
     args.add_argument("-r", "--resume", default=None, type=str, help="path to latest checkpoint (default: None)")
     args.add_argument("-d", "--device", default=None, type=str, help="indices of GPUs to enable (default: all)")
-    args.add_argument("-tf", "--train-fold", type=str, nargs="+", help="path to train_kfold")
-    args.add_argument(
-        "-vf",
-        "--valid-fold",
-        type=str,
-        nargs="+",
-    )
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple("CustomArgs", "flags type target")
