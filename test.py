@@ -2,26 +2,21 @@ from parse_config import ConfigParser
 import torch
 from tqdm import tqdm
 import data_loader.data_loaders as module_data
-import data_loader.datasets as ds
 import model as module_arch
 import argparse
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 import os
+import pandas as pd, numpy as np
+from utils import prepare_device
+from pathlib import Path
 
 
 def main(config):
     logger = config.get_logger("test")
 
     # setup data_loader instances
-    test_path = "/opt/ml/segmentation/input/data/test.json"
-
-    def collate_fn(batch):
-        return tuple(zip(*batch))
-
-    test_transform = A.Compose([ToTensorV2()])
-    test_dataset = ds.BasicDataset(data_dir=test_path, ann_file=None, mode="test", transform=test_transform)
-    data_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=32, num_workers=4, collate_fn=collate_fn)
+    data_loader = config.init_obj("test_data_loader", module_data)
 
     # build model architecture, then print to console
     model = config.init_obj("arch", module_arch)
@@ -30,17 +25,17 @@ def main(config):
     logger.info("Loading checkpoint: {} ...".format(config.resume))
     checkpoint = torch.load(config.resume)
     state_dict = checkpoint["state_dict"]
-    if config["n_gpu"] > 1:
-        model = torch.nn.DataParallel(model)
     model.load_state_dict(state_dict)
 
-    # prepare model for testing
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # prepare for (multi-device) GPU training
+    device, device_ids = prepare_device(config["n_gpu"])
+    if config["n_gpu"] > 1:
+        model = torch.nn.DataParallel(model)
     model = model.to(device)
-    model.eval()
+    if len(device_ids) > 1:
+        model = torch.nn.DataParallel(model, device_ids=device_ids)
 
-    total_loss = 0.0
-    total_metrics = torch.zeros(len(metric_fns))
+    model.eval()
 
     # sample_submisson.csv 열기
     submission = pd.read_csv("./sample_submission.csv", index_col=None)
@@ -54,29 +49,8 @@ def main(config):
     preds_array = np.empty((0, size * size), dtype=np.long)
 
     with torch.no_grad():
-<<<<<<< HEAD
-        for i, (data, target) in enumerate(tqdm(data_loader)):
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-
-            #
-            # save sample images, or do something with output here
-            #
-
-            # computing loss, metrics on test set
-            loss = loss_fn(output, target)
-            batch_size = data.shape[0]
-            total_loss += loss.item() * batch_size
-            for i, metric in enumerate(metric_fns):
-                total_metrics[i] += metric(output, target) * batch_size
-
-    n_samples = len(data_loader.sampler)
-    log = {"loss": total_loss / n_samples}
-    log.update({met.__name__: total_metrics[i].item() / n_samples for i, met in enumerate(metric_fns)})
-    logger.info(log)
-=======
         for i, (data, info) in enumerate(tqdm(data_loader)):
-            output = model(torch.stack(data).to(device))["out"]
+            output = model(torch.stack(data).to(device))
             oms = torch.argmax(output.squeeze(), dim=1).detach().cpu().numpy()
             temp_mask = []
             for d, mask in zip(np.stack(data), oms):
@@ -87,7 +61,7 @@ def main(config):
             oms = oms.reshape([oms.shape[0], size * size]).astype(int)
             preds_array = np.vstack((preds_array, oms))
 
-            file_name_list.append([i["file_name"] for i in image_infos])
+            file_name_list.append([i["file_name"] for i in info])
 
     file_names = [y for x in file_name_list for y in x]
     # PredictionString 대입
@@ -97,8 +71,8 @@ def main(config):
         )
 
     # submission.csv로 저장
-    submission.to_csv("./submission/" + os.path.basename(config.resume) + ".csv", index=False)
->>>>>>> develop
+    save_path = Path(config.resume).parent / "submission.csv"
+    submission.to_csv(save_path, index=False)
 
 
 if __name__ == "__main__":
