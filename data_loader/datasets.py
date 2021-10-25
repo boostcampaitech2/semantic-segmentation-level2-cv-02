@@ -5,6 +5,7 @@ import numpy as np
 from pycocotools.coco import COCO
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from PIL import Image
 import os
 
 category_names = [
@@ -88,3 +89,38 @@ class BasicDataset(Dataset):
     def __len__(self) -> int:
         # 전체 dataset의 size를 return
         return len(self.coco.getImgIds())
+
+
+class ResizedBasicDataset(Dataset):
+    """
+    Thrash Dataset
+    """
+
+    def __init__(self, data_dir="../input/resized_data_256", mode="train", transform=None):
+        super().__init__()
+        self.mode = mode
+        self.transform = transform
+        self.data_dir = data_dir
+
+    def __getitem__(self, index: int):
+        # dataset이 index되어 list처럼 동작
+
+        images = cv2.imread(os.path.join(self.data_dir, "image", str(index) + ".jpg"))
+        images = cv2.cvtColor(images, cv2.COLOR_BGR2RGB).astype(np.float32)
+        images /= 255.0
+
+        masks = np.load(os.path.join(self.data_dir, "mask", str(index) + ".npy"))
+        if self.transform is not None:
+            transformed = self.transform(image=images, mask=masks)
+            images = transformed["image"]
+            masks = transformed["mask"]
+        return images, masks, None
+
+    def __len__(self) -> int:
+        # 전체 dataset의 size를 return
+        # return 3272
+
+        list = os.listdir(os.path.join(self.data_dir, "image"))  # dir is your directory path
+        number_files = len(list)
+        return number_files
+        # return len(self.coco.getImgIds())

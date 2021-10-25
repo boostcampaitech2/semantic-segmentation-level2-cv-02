@@ -73,8 +73,6 @@ class ConfigParser:
             # update new config for fine-tuning
             config.update(read_json(args.config))
 
-        config.update({"no_validate": True if args.no_validate else False})
-
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
 

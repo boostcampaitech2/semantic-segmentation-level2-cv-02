@@ -26,11 +26,7 @@ def main(config):
 
     # setup data_loader instances
     data_loader = config.init_obj("data_loader", module_data)
-    valid_data_loader = None  # default : --no-validate
-
-    # validation을 진행할 때,
-    if not config["no_validate"]:
-        valid_data_loader = config.init_obj("valid_data_loader", module_data)
+    valid_data_loader = config.init_obj("valid_data_loader", module_data)
 
     # build model architecture, then print to console
     model = config.init_obj("arch", module_arch)
