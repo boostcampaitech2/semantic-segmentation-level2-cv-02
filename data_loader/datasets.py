@@ -7,6 +7,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from PIL import Image
 import os
+import json
 
 category_names = [
     "Backgroud",
@@ -101,11 +102,21 @@ class ResizedBasicDataset(Dataset):
         self.mode = mode
         self.transform = transform
         self.data_dir = data_dir
+        origin_dataset_path = "../input/data"
+        if mode == "train":
+            image_config_path = origin_dataset_path + "/train.json"
+        elif mode == "val":
+            image_config_path = origin_dataset_path + "/val.json"
+        with open(image_config_path) as json_file:
+            self.data_json = json.load(json_file)
+        self.file_names = list(
+            map(lambda x: str(int(x["file_name"].split("/")[1].split(".")[0])), self.data_json["images"])
+        )
 
     def __getitem__(self, index: int):
         # dataset이 index되어 list처럼 동작
 
-        images = cv2.imread(os.path.join(self.data_dir, "image", str(index) + ".jpg"))
+        images = cv2.imread(os.path.join(self.data_dir, "image", str(self.file_names[index]) + ".jpg"))
         images = cv2.cvtColor(images, cv2.COLOR_BGR2RGB).astype(np.float32)
         images /= 255.0
 
@@ -119,8 +130,5 @@ class ResizedBasicDataset(Dataset):
     def __len__(self) -> int:
         # 전체 dataset의 size를 return
         # return 3272
-
-        list = os.listdir(os.path.join(self.data_dir, "image"))  # dir is your directory path
-        number_files = len(list)
-        return number_files
+        return len(self.file_names)
         # return len(self.coco.getImgIds())
