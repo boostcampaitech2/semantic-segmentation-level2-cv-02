@@ -11,9 +11,7 @@ class Wandb:
         """
         self.config = config
         self.wandb_config = config["wandb"]
-        self.unique_tag = (
-            self.wandb_config["unique_tag"] if self.wandb_config["unique_tag"] == "" else str(datetime.datetime.now())
-        )
+        self.unique_tag = self.wandb_config["unique_tag"]
         self.entity = self.wandb_config["entity"]
         self.project = self.wandb_config["project"]
         dotenv_path = self.wandb_config["env_path"]
@@ -27,7 +25,10 @@ class Wandb:
         :param **kwargs: wandb의 태그와 name에 추가하고싶은 내용을 넣어줌 ex_ fold=1
         """
         tags = [f"unique_tag: {self.unique_tag}"]
-        name = f"{self.config['name']}_{self.unique_tag}"
+        name = f"{self.config['name']}_{self.config.run_id}"
+
+        if self.unique_tag:
+            name += f"_{self.unique_tag}"
 
         tags.extend(
             [
@@ -37,7 +38,6 @@ class Wandb:
                 f"usertrans: {self.config['data_loader']['type']}",
             ]
         )
-        name = f"{self.config['arch']['type']}, {self.unique_tag}"
         if kwargs:
             for k, v in kwargs.items():
                 tags.append(f"{k}: {v}")
