@@ -62,6 +62,8 @@ class ConfigParser:
         if args.resume is not None:
             resume = Path(args.resume)
             cfg_fname = resume.parent / "config.json"
+            if args.config:
+                cfg_fname = Path(args.config)
         else:
             msg_no_cfg = "Configuration file need to be specified. Add '-c config.json', for example."
             assert args.config is not None, msg_no_cfg
@@ -69,9 +71,6 @@ class ConfigParser:
             cfg_fname = Path(args.config)
 
         config = read_json(cfg_fname)
-        if args.config and resume:
-            # update new config for fine-tuning
-            config.update(read_json(args.config))
 
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
