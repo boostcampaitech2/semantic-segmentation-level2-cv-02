@@ -27,11 +27,7 @@ def main(config):
 
     # setup data_loader instances
     data_loader = config.init_obj("data_loader", module_data)
-    valid_data_loader = None  # default : --no-validate
-
-    # validation을 진행할 때,
-    if not config["no_validate"]:
-        valid_data_loader = config.init_obj("valid_data_loader", module_data)
+    valid_data_loader = config.init_obj("valid_data_loader", module_data)
 
     # build model architecture, then print to console
     model = config.init_obj("arch", module_arch)
@@ -79,9 +75,6 @@ if __name__ == "__main__":
         "--valid-fold",
         type=str,
         nargs="+",
-    )
-    args.add_argument(
-        "--no-validate", action="store_true", help="whether not to evaluate the checkpoint during training"
     )
 
     # custom cli options to modify configuration from default values given in json file.
