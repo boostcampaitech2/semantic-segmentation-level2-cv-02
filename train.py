@@ -68,9 +68,6 @@ if __name__ == "__main__":
     args.add_argument("-c", "--config", default="config.json", type=str, help="config file path (default: None)")
     args.add_argument("-r", "--resume", default=None, type=str, help="path to latest checkpoint (default: None)")
     args.add_argument("-d", "--device", default=None, type=str, help="indices of GPUs to enable (default: all)")
-    args.add_argument(
-        "--no-validate", action="store_true", help="whether not to evaluate the checkpoint during training"
-    )
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple("CustomArgs", "flags type target")
