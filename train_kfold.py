@@ -87,5 +87,5 @@ if __name__ == "__main__":
     fold = config["kfold"]["cnt"]  # 폴드의 개수
     for i in range(1, fold + 1):
         print("=" * 10, f"Fold {i}", "=" * 10)
-        config = change_fold(config, fold, save_dir)
+        config = change_fold(config, i, save_dir)
         main(config)
