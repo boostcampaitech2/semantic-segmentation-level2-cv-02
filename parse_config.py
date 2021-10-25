@@ -196,8 +196,6 @@ def change_fold(config, fold, save_dir=None):
 
     ann_train = config["kfold"]["train_fold"][:-5] + str(fold) + config["kfold"]["train_fold"][-5:]
     ann_valid = config["kfold"]["valid_fold"][:-5] + str(fold) + config["kfold"]["valid_fold"][-5:]
-    ann_train = "../input/data/val.json"
-    ann_valid = "../input/data/val.json"
 
     modification = {
         "data_loader;args;dataset;args;ann_file": ann_train,
