@@ -4,6 +4,8 @@ from torchvision.utils import make_grid
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 from utils2 import label_accuracy_score, add_hist
+from utils import Wandb
+import wandb
 
 
 class Trainer(BaseTrainer):
@@ -107,6 +109,44 @@ class Trainer(BaseTrainer):
             self.lr_scheduler.step()
         return log
 
+    def show_images_wandb(self, images, y_labels, preds):
+        """
+        wandb에 media로 이미지를 출력함
+
+        :param images: image array를 받음 [batch,channel,width,height]
+        :param y_labels: 실제 라벨 데이터
+        :param preds: 예측한 데이터
+        """
+        class_labels = {
+            0: "Backgroud",
+            1: "General trash",
+            2: "Paper",
+            3: "Paper pack",
+            4: "Metal",
+            5: "Glass",
+            6: "Plastic",
+            7: "Styrofoam",
+            8: "Plastic bag",
+            9: "Battery",
+            10: "Clothing",
+        }
+        for i in range(len(y_labels)):
+            im = images[i, :, :, :]
+            im = im.permute(1, 2, 0).cuda().cpu().detach().numpy()
+
+            # wandb.log({"image_preds": [wandb.Image(im, caption=f"real: {y_labels[i]}, predict: {preds[i]}")]})
+            wandb.log(
+                {
+                    "my_image_key": wandb.Image(
+                        im,
+                        masks={
+                            "predictions": {"mask_data": preds[i], "class_labels": class_labels},
+                            "ground_truth": {"mask_data": y_labels[i], "class_labels": class_labels},
+                        },
+                    )
+                }
+            )
+
     def _valid_epoch(self, epoch):
         """
         Validate after training an epoch
@@ -129,7 +169,6 @@ class Trainer(BaseTrainer):
                 data = torch.stack(data)
                 target = torch.stack(target).long()
                 data, target = data.to(self.device), target.to(self.device)
-
                 output = self.model(data)
                 loss = self.criterion(output, target)
                 total_loss += loss
@@ -140,6 +179,7 @@ class Trainer(BaseTrainer):
 
                 hist = add_hist(hist, target, output, n_class=n_class)
 
+            self.show_images_wandb(data[:30], target[:30], output[:30])
             acc, acc_cls, mIoU, fwavacc, IoU = label_accuracy_score(hist)
             avrg_loss = total_loss / cnt
 
