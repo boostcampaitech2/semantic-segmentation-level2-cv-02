@@ -9,6 +9,8 @@ import model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
+import random
+import os
 
 
 import matplotlib.pyplot as plt
@@ -16,9 +18,13 @@ import matplotlib.pyplot as plt
 # fix random seeds for reproducibility
 SEED = 123
 torch.manual_seed(SEED)
+os.environ["PYTHONHASHSEED"] = str(SEED)
+torch.cuda.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)  # if use multi-GPU
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
+random.seed(SEED)
 
 
 def main(config):
