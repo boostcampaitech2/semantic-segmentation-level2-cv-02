@@ -1,13 +1,7 @@
 {
-    "name": "Segmentation_ujintest",
+    "name": "Unet-test",
     "n_gpu": 1,
-    "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
-    "kfold": {
-        "flag": true,
-        "cnt": 5,
-        "train_fold": "../input/data/train_fold.json", 
-        "valid_fold": "../input/data/val_fold.json"        
-    },
+    "arch": {"type": "UNet", "args": {"num_classes": 11}},
     "data_loader": {
         "type": "BasicDataLoader",
         "args": {
@@ -20,9 +14,9 @@
                     "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
-            "batch_size": 16,
+            "batch_size": 8,
             "shuffle": true,
-            "num_workers": 6
+            "num_workers": 4
         }
     },
     "valid_data_loader": {
@@ -64,7 +58,7 @@
     "metrics": [],
     "lr_scheduler": {"type": "CosineAnnealingLR", "args": {"T_max": 10, "eta_min": 0.001}},
     "trainer": {
-        "epochs": 1,
+        "epochs": 2,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
