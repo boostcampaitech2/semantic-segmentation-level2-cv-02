@@ -1,7 +1,7 @@
 {
-    "name": "Segmentation_ujintest",
+    "name": "Unet-test",
     "n_gpu": 1,
-    "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
+    "arch": {"type": "UNet", "args": {"num_classes": 11}},
     "data_loader": {
         "type": "BasicDataLoader",
         "args": {
@@ -14,9 +14,9 @@
                     "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
-            "batch_size": 16,
+            "batch_size": 8,
             "shuffle": true,
-            "num_workers": 6
+            "num_workers": 4
         }
     },
     "valid_data_loader": {
