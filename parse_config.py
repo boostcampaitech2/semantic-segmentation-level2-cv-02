@@ -144,6 +144,11 @@ class ConfigParser:
     def save_dir(self):
         return self._save_dir
 
+    @save_dir.setter
+    def save_dir(self, value):  # setter
+        self._save_dir = value
+        self.save_dir.mkdir(parents=True, exist_ok=True)
+
     @property
     def log_dir(self):
         return self._log_dir
@@ -180,3 +185,20 @@ def _set_by_path(tree, keys, value):
 def _get_by_path(tree, keys):
     """Access a nested object in tree by sequence of keys."""
     return reduce(getitem, keys, tree)
+
+
+def change_fold(config, fold, save_dir=None):
+    """현재 fold에 따라 annotation file 경로 수정"""
+    # kfold를 진행하지 않을 경우 에러 발생
+    assert config["kfold"]["flag"] is True
+    if save_dir is not None:
+        config.save_dir = Path(os.path.join(save_dir, f"fold{fold}"))
+
+    ann_train = config["kfold"]["train_fold"][:-5] + str(fold) + config["kfold"]["train_fold"][-5:]
+    ann_valid = config["kfold"]["valid_fold"][:-5] + str(fold) + config["kfold"]["valid_fold"][-5:]
+
+    modification = {
+        "data_loader;args;dataset;args;ann_file": ann_train,
+        "valid_data_loader;args;dataset;args;ann_file": ann_valid,
+    }
+    return _update_config(config, modification)
