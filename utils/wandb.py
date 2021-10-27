@@ -81,3 +81,41 @@ class Wandb:
     # my_table.add_column("label", y_labels)
     # my_table.add_column("class_prediction", preds)
     # wandb.log({"image_preds_table": my_table})
+
+    def show_images_wandb(self, images, y_labels, preds):
+        """
+        wandb에 media로 이미지를 출력함
+
+        :param images: image array를 받음 [batch,channel,width,height]
+        :param y_labels: 실제 라벨 데이터
+        :param preds: 예측한 데이터
+        """
+        class_labels = {
+            0: "Backgroud",
+            1: "General trash",
+            2: "Paper",
+            3: "Paper pack",
+            4: "Metal",
+            5: "Glass",
+            6: "Plastic",
+            7: "Styrofoam",
+            8: "Plastic bag",
+            9: "Battery",
+            10: "Clothing",
+        }
+        for i in range(len(y_labels)):
+            im = images[i, :, :, :]
+            im = im.permute(1, 2, 0).cuda().cpu().detach().numpy()
+
+            # wandb.log({"image_preds": [wandb.Image(im, caption=f"real: {y_labels[i]}, predict: {preds[i]}")]})
+            wandb.log(
+                {
+                    f"{wandb.run.name}": wandb.Image(
+                        im,
+                        masks={
+                            "predictions": {"mask_data": preds[i], "class_labels": class_labels},
+                            "ground_truth": {"mask_data": y_labels[i], "class_labels": class_labels},
+                        },
+                    )
+                }
+            )
