@@ -6,7 +6,7 @@ from utils import inf_loop, MetricTracker
 from utils2 import label_accuracy_score, add_hist
 
 
-class Trainer(BaseTrainer):
+class Trainer_amp(BaseTrainer):
     """
     Trainer class
     """
@@ -62,7 +62,7 @@ class Trainer(BaseTrainer):
 
         hist = np.zeros((n_class, n_class))
 
-        # scaler = torch.cuda.amp.GradScaler(enabled=True)
+        scaler = torch.cuda.amp.GradScaler(enabled=True)
 
         torch.cuda.empty_cache()
         for batch_idx, (data, target, _) in enumerate(self.data_loader):
@@ -73,22 +73,16 @@ class Trainer(BaseTrainer):
             data, target = data.to(self.device), target.to(self.device)
 
             # Mixed-Precision
-            # with torch.cuda.amp.autocast(enabled=True):
-            #     # inference
-            #     output = self.model(data)
-            #     # loss
-            #     loss = self.criterion(output, target)
+            with torch.cuda.amp.autocast(enabled=True):
+                # inference
+                output = self.model(data)
+                # loss
+                loss = self.criterion(output, target)
 
-            # scaler.scale(loss).backward()
-            # scaler.step(self.optimizer)
-            # scaler.update()
-
-            output = self.model(data)
-            loss = self.criterion(output, target)
-
+            scaler.scale(loss).backward()
+            scaler.step(self.optimizer)
+            scaler.update()
             self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
 
             output = torch.argmax(output, dim=1).detach().cpu().numpy()
             target = target.detach().cpu().numpy()

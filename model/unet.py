@@ -20,7 +20,7 @@ class UNet(nn.Module):
 
 
 class UnetPlusPlus(nn.Module):
-    def __init__(self, encoder_name="timm-efficientnet-b0", encoder_weights="imagenet", in_channels=3, num_classes=11):
+    def __init__(self, encoder_name="efficientnet-b7", encoder_weights="imagenet", in_channels=3, num_classes=11):
         super(UnetPlusPlus, self).__init__()
         self.model = smp.UnetPlusPlus(
             encoder_name=encoder_name,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
