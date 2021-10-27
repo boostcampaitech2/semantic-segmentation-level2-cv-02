@@ -1,7 +1,7 @@
 {
-    "name": "Unet-test",
+    "name": "Unet++_EncoderTest",
     "n_gpu": 1,
-    "arch": {"type": "UNet", "args": {"num_classes": 11}},
+    "arch": {"type": "UnetPlusPlus", "args": {"num_classes": 11}},
     "data_loader": {
         "type": "BasicDataLoader",
         "args": {
@@ -14,7 +14,7 @@
                     "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
-            "batch_size": 8,
+            "batch_size": 16,
             "shuffle": true,
             "num_workers": 4
         }
@@ -58,7 +58,7 @@
     "metrics": [],
     "lr_scheduler": {"type": "CosineAnnealingLR", "args": {"T_max": 10, "eta_min": 0.001}},
     "trainer": {
-        "epochs": 2,
+        "epochs": 1,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
