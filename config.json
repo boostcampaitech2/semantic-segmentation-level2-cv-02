@@ -1,9 +1,9 @@
 {
-    "name": "Segmentation_ujintest",
+    "name": "Base",
     "n_gpu": 1,
     "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
     "kfold": {
-        "flag": true,
+        "flag": false,
         "cnt": 5,
         "train_fold": "../input/data/train_fold.json", 
         "valid_fold": "../input/data/val_fold.json"        
@@ -70,7 +70,8 @@
         "verbosity": 2,
         "monitor": "max valid/mIoU",
         "early_stop": 10,
-        "tensorboard": false
+        "tensorboard": false,
+        "use_amp": true
     },
     "wandb": {
         "env_path": "./.env",

@@ -2,8 +2,7 @@ import numpy as np
 import torch
 from torchvision.utils import make_grid
 from base import BaseTrainer
-from utils import inf_loop, MetricTracker
-from utils2 import label_accuracy_score, add_hist
+from utils import inf_loop, MetricTracker, label_accuracy_score, add_hist
 from utils import Wandb
 import wandb
 
@@ -41,6 +40,7 @@ class Trainer(BaseTrainer):
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
+        self.use_amp = self.config["trainer"]["use_amp"]
 
         self.train_metrics = MetricTracker(
             *["train/loss", "train/acc", "train/mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
@@ -63,7 +63,9 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
 
         hist = np.zeros((n_class, n_class))
+        scaler = torch.cuda.amp.GradScaler(enabled=True) if self.use_amp else None
 
+        torch.cuda.empty_cache()
         for batch_idx, (data, target, _) in enumerate(self.data_loader):
             data = torch.stack(data)
             target = torch.stack(target).long()
@@ -71,14 +73,26 @@ class Trainer(BaseTrainer):
             # gpu 연산을 위해 device 할당
             data, target = data.to(self.device), target.to(self.device)
 
-            # inference
-            output = self.model(data)
+            # Mixed-Precision
+            if self.use_amp:
+                with torch.cuda.amp.autocast(enabled=True):
+                    # inference
+                    output = self.model(data)
+                    # loss
+                    loss = self.criterion(output, target)
 
-            # loss
-            loss = self.criterion(output, target)
+                scaler.scale(loss).backward()
+                scaler.step(self.optimizer)
+                scaler.update()
+            else:
+                # inference
+                output = self.model(data)
+                # loss
+                loss = self.criterion(output, target)
+                loss.backward()
+                self.optimizer.step()
+
             self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
 
             output = torch.argmax(output, dim=1).detach().cpu().numpy()
             target = target.detach().cpu().numpy()

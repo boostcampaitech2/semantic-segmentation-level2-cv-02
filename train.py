@@ -8,13 +8,9 @@ import model.metric as module_metric
 import model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
-from trainer.trainer_amp import Trainer_amp
 from utils import prepare_device
 import random
 import os
-
-
-import matplotlib.pyplot as plt
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -55,30 +51,17 @@ def main(config):
     optimizer = config.init_obj("optimizer", torch.optim, trainable_params)
     lr_scheduler = config.init_obj("lr_scheduler", torch.optim.lr_scheduler, optimizer)
 
-    if config["amp"]["use_amp"] == "False":
-        trainer = Trainer(
-            model,
-            criterion,
-            metrics,
-            optimizer,
-            config=config,
-            device=device,
-            data_loader=data_loader,
-            valid_data_loader=valid_data_loader,
-            lr_scheduler=lr_scheduler,
-        )
-    else:
-        trainer = Trainer_amp(
-            model,
-            criterion,
-            metrics,
-            optimizer,
-            config=config,
-            device=device,
-            data_loader=data_loader,
-            valid_data_loader=valid_data_loader,
-            lr_scheduler=lr_scheduler,
-        )
+    trainer = Trainer(
+        model,
+        criterion,
+        metrics,
+        optimizer,
+        config=config,
+        device=device,
+        data_loader=data_loader,
+        valid_data_loader=valid_data_loader,
+        lr_scheduler=lr_scheduler,
+    )
 
     trainer.train()
 
@@ -88,7 +71,6 @@ if __name__ == "__main__":
     args.add_argument("-c", "--config", default="config.json", type=str, help="config file path (default: None)")
     args.add_argument("-r", "--resume", default=None, type=str, help="path to latest checkpoint (default: None)")
     args.add_argument("-d", "--device", default=None, type=str, help="indices of GPUs to enable (default: all)")
-    # args.add_argument("-a", "--amp", default=False, type=bool, help="using amp (default: False)")
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple("CustomArgs", "flags type target")
