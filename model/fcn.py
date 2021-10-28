@@ -4,23 +4,25 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .base_models.vgg import vgg16
 
+
 class FCN32s(nn.Module):
     """There are some difference from original fcn"""
 
-    def __init__(self, num_classes=11, backbone='vgg16', aux=False, pretrained_base=True,
-                 norm_layer=nn.BatchNorm2d, **kwargs):
+    def __init__(
+        self, num_classes=11, backbone="vgg16", aux=False, pretrained_base=True, norm_layer=nn.BatchNorm2d, **kwargs
+    ):
         super(FCN32s, self).__init__()
-        self.aux = aux # auxiliary loss -> 사용 x
-        if backbone == 'vgg16':
+        self.aux = aux  # auxiliary loss -> 사용 x
+        if backbone == "vgg16":
             self.pretrained = vgg16(pretrained=pretrained_base).features
         else:
-            raise RuntimeError('unknown backbone: {}'.format(backbone))
+            raise RuntimeError("unknown backbone: {}".format(backbone))
         self.head = _FCNHead(512, num_classes, norm_layer)
-        
+
         if aux:
             self.auxlayer = _FCNHead(512, nclass, norm_layer)
 
-        self.__setattr__('exclusive', ['head', 'auxlayer'] if aux else ['head'])
+        self.__setattr__("exclusive", ["head", "auxlayer"] if aux else ["head"])
 
     def forward(self, x):
         size = x.size()[2:]
@@ -28,25 +30,27 @@ class FCN32s(nn.Module):
 
         outputs = []
         out = self.head(pool5)
-        out = F.interpolate(out, size, mode='bilinear', align_corners=True)
+        out = F.interpolate(out, size, mode="bilinear", align_corners=True)
         outputs.append(out)
 
         if self.aux:
             auxout = self.auxlayer(pool5)
-            auxout = F.interpolate(auxout, size, mode='bilinear', align_corners=True)
+            auxout = F.interpolate(auxout, size, mode="bilinear", align_corners=True)
             outputs.append(auxout)
 
-        return out # tuple(outputs)
+        return out  # tuple(outputs)
 
 
 class FCN16s(nn.Module):
-    def __init__(self, num_classes=11, backbone='vgg16', aux=False, pretrained_base=True, norm_layer=nn.BatchNorm2d, **kwargs):
+    def __init__(
+        self, num_classes=11, backbone="vgg16", aux=False, pretrained_base=True, norm_layer=nn.BatchNorm2d, **kwargs
+    ):
         super(FCN16s, self).__init__()
         self.aux = aux
-        if backbone == 'vgg16':
+        if backbone == "vgg16":
             self.pretrained = vgg16(pretrained=pretrained_base).features
         else:
-            raise RuntimeError('unknown backbone: {}'.format(backbone))
+            raise RuntimeError("unknown backbone: {}".format(backbone))
         self.pool4 = nn.Sequential(*self.pretrained[:24])
         self.pool5 = nn.Sequential(*self.pretrained[24:])
         self.head = _FCNHead(512, num_classes, norm_layer)
@@ -54,7 +58,7 @@ class FCN16s(nn.Module):
         if aux:
             self.auxlayer = _FCNHead(512, num_classes, norm_layer)
 
-        self.__setattr__('exclusive', ['head', 'score_pool4', 'auxlayer'] if aux else ['head', 'score_pool4'])
+        self.__setattr__("exclusive", ["head", "score_pool4", "auxlayer"] if aux else ["head", "score_pool4"])
 
     def forward(self, x):
         pool4 = self.pool4(x)
@@ -65,28 +69,30 @@ class FCN16s(nn.Module):
 
         score_pool4 = self.score_pool4(pool4)
 
-        upscore2 = F.interpolate(score_fr, score_pool4.size()[2:], mode='bilinear', align_corners=True)
+        upscore2 = F.interpolate(score_fr, score_pool4.size()[2:], mode="bilinear", align_corners=True)
         fuse_pool4 = upscore2 + score_pool4
 
-        out = F.interpolate(fuse_pool4, x.size()[2:], mode='bilinear', align_corners=True)
+        out = F.interpolate(fuse_pool4, x.size()[2:], mode="bilinear", align_corners=True)
         outputs.append(out)
 
         if self.aux:
             auxout = self.auxlayer(pool5)
-            auxout = F.interpolate(auxout, x.size()[2:], mode='bilinear', align_corners=True)
+            auxout = F.interpolate(auxout, x.size()[2:], mode="bilinear", align_corners=True)
             outputs.append(auxout)
 
-        return out # tuple(outputs)
+        return out  # tuple(outputs)
 
 
 class FCN8s(nn.Module):
-    def __init__(self, num_classes=11, backbone='vgg16', aux=False, pretrained_base=True, norm_layer=nn.BatchNorm2d, **kwargs):
+    def __init__(
+        self, num_classes=11, backbone="vgg16", aux=False, pretrained_base=True, norm_layer=nn.BatchNorm2d, **kwargs
+    ):
         super(FCN8s, self).__init__()
         self.aux = aux
-        if backbone == 'vgg16':
+        if backbone == "vgg16":
             self.pretrained = vgg16(pretrained=pretrained_base).features
         else:
-            raise RuntimeError('unknown backbone: {}'.format(backbone))
+            raise RuntimeError("unknown backbone: {}".format(backbone))
         self.pool3 = nn.Sequential(*self.pretrained[:17])
         self.pool4 = nn.Sequential(*self.pretrained[17:24])
         self.pool5 = nn.Sequential(*self.pretrained[24:])
@@ -96,9 +102,10 @@ class FCN8s(nn.Module):
         if aux:
             self.auxlayer = _FCNHead(512, num_classes, norm_layer)
 
-        self.__setattr__('exclusive',
-                         ['head', 'score_pool3', 'score_pool4', 'auxlayer'] if aux else ['head', 'score_pool3',
-                                                                                         'score_pool4'])
+        self.__setattr__(
+            "exclusive",
+            ["head", "score_pool3", "score_pool4", "auxlayer"] if aux else ["head", "score_pool3", "score_pool4"],
+        )
 
     def forward(self, x):
         pool3 = self.pool3(x)
@@ -111,21 +118,21 @@ class FCN8s(nn.Module):
         score_pool4 = self.score_pool4(pool4)
         score_pool3 = self.score_pool3(pool3)
 
-        upscore2 = F.interpolate(score_fr, score_pool4.size()[2:], mode='bilinear', align_corners=True)
+        upscore2 = F.interpolate(score_fr, score_pool4.size()[2:], mode="bilinear", align_corners=True)
         fuse_pool4 = upscore2 + score_pool4
 
-        upscore_pool4 = F.interpolate(fuse_pool4, score_pool3.size()[2:], mode='bilinear', align_corners=True)
+        upscore_pool4 = F.interpolate(fuse_pool4, score_pool3.size()[2:], mode="bilinear", align_corners=True)
         fuse_pool3 = upscore_pool4 + score_pool3
 
-        out = F.interpolate(fuse_pool3, x.size()[2:], mode='bilinear', align_corners=True)
+        out = F.interpolate(fuse_pool3, x.size()[2:], mode="bilinear", align_corners=True)
         outputs.append(out)
 
         if self.aux:
             auxout = self.auxlayer(pool5)
-            auxout = F.interpolate(auxout, x.size()[2:], mode='bilinear', align_corners=True)
+            auxout = F.interpolate(auxout, x.size()[2:], mode="bilinear", align_corners=True)
             outputs.append(auxout)
 
-        return out # tuple(outputs)
+        return out  # tuple(outputs)
 
 
 class _FCNHead(nn.Module):
@@ -137,7 +144,7 @@ class _FCNHead(nn.Module):
             norm_layer(inter_channels),
             nn.ReLU(inplace=True),
             nn.Dropout(0.1),
-            nn.Conv2d(inter_channels, channels, 1)
+            nn.Conv2d(inter_channels, channels, 1),
         )
 
     def forward(self, x):

@@ -6,26 +6,20 @@ import data_loader.data_loaders as module_data
 import loss as module_loss
 import model.metric as module_metric
 import model as module_arch
-from parse_config import ConfigParser
+from parse_config import ConfigParser, change_fold, _update_config
 from trainer import Trainer
-from trainer.trainer_amp import Trainer_amp
 from utils import prepare_device
-import random
 import os
-
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 
 # fix random seeds for reproducibility
 SEED = 123
 torch.manual_seed(SEED)
-os.environ["PYTHONHASHSEED"] = str(SEED)
-torch.cuda.manual_seed(SEED)
-torch.cuda.manual_seed_all(SEED)  # if use multi-GPU
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
-random.seed(SEED)
 
 
 def main(config):
@@ -55,30 +49,17 @@ def main(config):
     optimizer = config.init_obj("optimizer", torch.optim, trainable_params)
     lr_scheduler = config.init_obj("lr_scheduler", torch.optim.lr_scheduler, optimizer)
 
-    if config["amp"]["use_amp"] == "False":
-        trainer = Trainer(
-            model,
-            criterion,
-            metrics,
-            optimizer,
-            config=config,
-            device=device,
-            data_loader=data_loader,
-            valid_data_loader=valid_data_loader,
-            lr_scheduler=lr_scheduler,
-        )
-    else:
-        trainer = Trainer_amp(
-            model,
-            criterion,
-            metrics,
-            optimizer,
-            config=config,
-            device=device,
-            data_loader=data_loader,
-            valid_data_loader=valid_data_loader,
-            lr_scheduler=lr_scheduler,
-        )
+    trainer = Trainer(
+        model,
+        criterion,
+        metrics,
+        optimizer,
+        config=config,
+        device=device,
+        data_loader=data_loader,
+        valid_data_loader=valid_data_loader,
+        lr_scheduler=lr_scheduler,
+    )
 
     trainer.train()
 
@@ -88,7 +69,6 @@ if __name__ == "__main__":
     args.add_argument("-c", "--config", default="config.json", type=str, help="config file path (default: None)")
     args.add_argument("-r", "--resume", default=None, type=str, help="path to latest checkpoint (default: None)")
     args.add_argument("-d", "--device", default=None, type=str, help="indices of GPUs to enable (default: all)")
-    # args.add_argument("-a", "--amp", default=False, type=bool, help="using amp (default: False)")
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple("CustomArgs", "flags type target")
@@ -101,5 +81,11 @@ if __name__ == "__main__":
             target="wandb;unique_tag",
         ),
     ]
+
     config = ConfigParser.from_args(args, options)
-    main(config)
+    save_dir = str(config.save_dir)  # 완료된 실험을 저장하는 경로
+    fold = config["kfold"]["cnt"]  # 폴드의 개수
+    for i in range(1, fold + 1):
+        print("=" * 10, f"Fold {i}", "=" * 10)
+        config = change_fold(config, i, save_dir)
+        main(config)

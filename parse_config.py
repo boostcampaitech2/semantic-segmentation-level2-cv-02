@@ -24,18 +24,18 @@ class ConfigParser:
         # load config file and apply modification
         self._config = _update_config(config, modification)
         self.resume = resume
-
+        self.run_id = run_id
         # set save_dir where trained model and log will be saved.
         save_dir = Path(self.config["trainer"]["save_dir"])
 
         exper_name = self.config["name"]
-        if run_id is None:  # use timestamp as default run-id
-            run_id = datetime.now().strftime(r"%m%d_%H%M%S")
-        self._save_dir = save_dir / "models" / exper_name / run_id
-        self._log_dir = save_dir / "log" / exper_name / run_id
+        if self.run_id is None:  # use timestamp as default run-id
+            self.run_id = datetime.now().strftime(r"%m%d_%H%M%S")
+        self._save_dir = save_dir / "models" / exper_name / self.run_id
+        self._log_dir = save_dir / "log" / exper_name / self.run_id
 
         # make directory for saving checkpoints and log.
-        exist_ok = run_id == ""
+        exist_ok = self.run_id == ""
         self.save_dir.mkdir(parents=True, exist_ok=exist_ok)
         self.log_dir.mkdir(parents=True, exist_ok=exist_ok)
 
@@ -62,6 +62,8 @@ class ConfigParser:
         if args.resume is not None:
             resume = Path(args.resume)
             cfg_fname = resume.parent / "config.json"
+            if args.config:
+                cfg_fname = Path(args.config)
         else:
             msg_no_cfg = "Configuration file need to be specified. Add '-c config.json', for example."
             assert args.config is not None, msg_no_cfg
@@ -69,11 +71,6 @@ class ConfigParser:
             cfg_fname = Path(args.config)
 
         config = read_json(cfg_fname)
-        if args.config and resume:
-            # update new config for fine-tuning
-            config.update(read_json(args.config))
-
-        # config.update({"no_validate":True if args.no_validate else False})
 
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
@@ -147,9 +144,18 @@ class ConfigParser:
     def save_dir(self):
         return self._save_dir
 
+    @save_dir.setter
+    def save_dir(self, value):  # setter
+        self._save_dir = value
+        self.save_dir.mkdir(parents=True, exist_ok=True)
+
     @property
     def log_dir(self):
         return self._log_dir
+
+    @property
+    def get_run_id(self):
+        return self.run_id
 
 
 # helper functions to update config dict with custom cli options
@@ -179,3 +185,20 @@ def _set_by_path(tree, keys, value):
 def _get_by_path(tree, keys):
     """Access a nested object in tree by sequence of keys."""
     return reduce(getitem, keys, tree)
+
+
+def change_fold(config, fold, save_dir=None):
+    """현재 fold에 따라 annotation file 경로 수정"""
+    # kfold를 진행하지 않을 경우 에러 발생
+    assert config["kfold"]["flag"] is True
+    if save_dir is not None:
+        config.save_dir = Path(os.path.join(save_dir, f"fold{fold}"))
+
+    ann_train = config["kfold"]["train_fold"][:-5] + str(fold) + config["kfold"]["train_fold"][-5:]
+    ann_valid = config["kfold"]["valid_fold"][:-5] + str(fold) + config["kfold"]["valid_fold"][-5:]
+
+    modification = {
+        "data_loader;args;dataset;args;ann_file": ann_train,
+        "valid_data_loader;args;dataset;args;ann_file": ann_valid,
+    }
+    return _update_config(config, modification)

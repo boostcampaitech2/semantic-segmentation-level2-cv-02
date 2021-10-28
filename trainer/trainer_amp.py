@@ -4,11 +4,9 @@ from torchvision.utils import make_grid
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 from utils2 import label_accuracy_score, add_hist
-from utils import Wandb
-import wandb
 
 
-class Trainer(BaseTrainer):
+class Trainer_amp(BaseTrainer):
     """
     Trainer class
     """
@@ -64,6 +62,9 @@ class Trainer(BaseTrainer):
 
         hist = np.zeros((n_class, n_class))
 
+        scaler = torch.cuda.amp.GradScaler(enabled=True)
+
+        torch.cuda.empty_cache()
         for batch_idx, (data, target, _) in enumerate(self.data_loader):
             data = torch.stack(data)
             target = torch.stack(target).long()
@@ -71,14 +72,17 @@ class Trainer(BaseTrainer):
             # gpu 연산을 위해 device 할당
             data, target = data.to(self.device), target.to(self.device)
 
-            # inference
-            output = self.model(data)
+            # Mixed-Precision
+            with torch.cuda.amp.autocast(enabled=True):
+                # inference
+                output = self.model(data)
+                # loss
+                loss = self.criterion(output, target)
 
-            # loss
-            loss = self.criterion(output, target)
+            scaler.scale(loss).backward()
+            scaler.step(self.optimizer)
+            scaler.update()
             self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
 
             output = torch.argmax(output, dim=1).detach().cpu().numpy()
             target = target.detach().cpu().numpy()
@@ -131,6 +135,7 @@ class Trainer(BaseTrainer):
                 data = torch.stack(data)
                 target = torch.stack(target).long()
                 data, target = data.to(self.device), target.to(self.device)
+
                 output = self.model(data)
                 loss = self.criterion(output, target)
                 total_loss += loss
@@ -141,7 +146,6 @@ class Trainer(BaseTrainer):
 
                 hist = add_hist(hist, target, output, n_class=n_class)
 
-            self.wandb.show_images_wandb(data[:30], target[:30], output[:30])
             acc, acc_cls, mIoU, fwavacc, IoU = label_accuracy_score(hist)
             avrg_loss = total_loss / cnt
 
