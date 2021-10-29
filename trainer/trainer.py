@@ -43,7 +43,7 @@ class Trainer(BaseTrainer):
         self.use_amp = self.config["trainer"]["use_amp"]
 
         self.train_metrics = MetricTracker(
-            *["train/loss", "train/acc", "train/mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
+            *["train/loss", "train/acc", "train/mIoU", "charts/learning_rate"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
         )
         self.valid_metrics = MetricTracker(
             *["valid/loss", "valid/acc", "valid/mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
@@ -58,7 +58,6 @@ class Trainer(BaseTrainer):
         """
         n_class = 11
         best_loss = 9999999
-
         self.model.train()
         self.train_metrics.reset()
 
@@ -120,6 +119,7 @@ class Trainer(BaseTrainer):
             val_log = self._valid_epoch(epoch)
             log.update(**{k: v for k, v in val_log.items()})
         if self.lr_scheduler is not None:
+            log.update(**{"charts/learning_rate": self.lr_scheduler.get_last_lr()[0]})
             self.lr_scheduler.step()
         return log
 
