@@ -1,7 +1,7 @@
 {
-    "name": "DeepLabV3Plus_IOU_loss",
+    "name": "Base",
     "n_gpu": 1,
-    "arch": {"type": "DeepLabV3Plus", "args": {"num_classes": 11}},
+    "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
     "kfold": {
         "flag": false,
         "cnt": 5,
@@ -60,11 +60,11 @@
         }
     },
     "optimizer": {"type": "Adam", "args": {"lr": 0.001, "weight_decay": 0, "amsgrad": true}},
-    "loss": "IOU_Loss",
+    "loss": "CrossEntropyLoss",
     "metrics": [],
     "lr_scheduler": {"type": "CosineAnnealingLR", "args": {"T_max": 10, "eta_min": 0.001}},
     "trainer": {
-        "epochs": 30,
+        "epochs": 1,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
