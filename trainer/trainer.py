@@ -43,7 +43,9 @@ class Trainer(BaseTrainer):
         self.use_amp = self.config["trainer"]["use_amp"]
 
         self.train_metrics = MetricTracker(
-            *["train/loss", "train/acc", "train/mIoU", "charts/learning_rate"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
+            *["train/loss", "train/acc", "train/mIoU", "charts/learning_rate"],
+            *[m.__name__ for m in self.metric_ftns],
+            writer=self.writer,
         )
         self.valid_metrics = MetricTracker(
             *["valid/loss", "valid/acc", "valid/mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
@@ -77,13 +79,6 @@ class Trainer(BaseTrainer):
                 with torch.cuda.amp.autocast(enabled=True):
                     # inference
                     output = self.model(data)
-                    # output = torch.argmax(output, dim=1)
-                    # print(output)
-                    # target = target.float()
-                    # print(output.size())
-                    # print(target.size())
-                    # loss
-                    # if self.criterion != ""
                     loss = self.criterion(output, target)
 
                 scaler.scale(loss).backward()
@@ -94,8 +89,6 @@ class Trainer(BaseTrainer):
                 output = self.model(data)
                 # loss
                 loss = self.criterion(output, target)
-                # loss.forward(output, target)
-                print("####", loss)
                 loss.backward()
                 self.optimizer.step()
 

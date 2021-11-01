@@ -179,15 +179,12 @@ class DiceCELoss(nn.Module):
         super(DiceCELoss, self).__init__()
 
     def forward(self, inputs, targets, smooth=1):
-        print("ert")
         # flatten label and prediction tensors
         num_classes = inputs.size(1)
         true_1_hot = torch.eye(num_classes)[targets]
-        print("#######1")
         true_1_hot = true_1_hot.permute(0, 3, 1, 2).float()
         probas = F.softmax(inputs, dim=1)
         # probas = nn.CrossEntropyLoss()(inputs, targets)
-        print("#######2")
 
         true_1_hot = true_1_hot.type(inputs.type())
         dims = (0,) + tuple(range(2, targets.ndimension()))
@@ -195,11 +192,9 @@ class DiceCELoss(nn.Module):
         cardinality = torch.sum(probas + true_1_hot, dims)
         dice_loss = (2.0 * intersection / (cardinality + 1e-7)).mean()
         dice_loss = 1 - dice_loss
-        print("#######3")
 
         ce = F.cross_entropy(inputs, targets, reduction="mean")
         dice_bce = ce * 0.75 + dice_loss * 0.25
-        print("############", type(dice_bce))
         return dice_bce
 
 
