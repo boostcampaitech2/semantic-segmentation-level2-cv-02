@@ -21,7 +21,7 @@ import torch._utils
 import torch.nn.functional as F
 
 
-BatchNorm2d_class = BatchNorm2d = torch.nn.SyncBatchNorm
+BatchNorm2d_class = BatchNorm2d = torch.nn.BatchNorm2d
 relu_inplace = True
 
 ALIGN_CORNERS = True
@@ -36,7 +36,7 @@ config = {
         "NAME": "seg_hrnet",
         "NUM_OUTPUTS": 2,
         # "PRETRAINED": "/opt/ml/segmentation/input/pretrained_weights/HRNet_W48_C_ssld_pretrained.pth",
-        # "PRETRAINED": "/opt/ml/segmentation/input/pretrained_weights/hrnet_ocr_cocostuff_3965_torch04.pth",
+        "PRETRAINED": "/opt/ml/segmentation/input/pretrained_weights/hrnetv2_w48_imagenet_pretrained.pth",
         "EXTRA": {
             "FINAL_CONV_KERNEL": 1,
             "STAGE1": {
