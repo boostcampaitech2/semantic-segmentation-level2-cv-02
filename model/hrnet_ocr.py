@@ -1,4 +1,4 @@
-# pretrained_weights download : https://github.com/HRNet/HRNet-Semantic-Segmentation
+# pretrained_weights download : https://drive.google.com/drive/folders/1fs-uLzXvmsISbS635eRZCc5uzQdBIZ_U?usp=sharing
 # ------------------------------------------------------------------------------
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
@@ -35,7 +35,6 @@ config = {
     "MODEL": {
         "NAME": "seg_hrnet",
         "NUM_OUTPUTS": 2,
-        # "PRETRAINED": "/opt/ml/segmentation/input/pretrained_weights/HRNet_W48_C_ssld_pretrained.pth",
         "PRETRAINED": "/opt/ml/segmentation/input/pretrained_weights/hrnetv2_w48_imagenet_pretrained.pth",
         "EXTRA": {
             "FINAL_CONV_KERNEL": 1,
@@ -103,7 +102,10 @@ class HRNet_OCR(nn.Module):
 
     def forward(self, x):
         x = self.encoder(x)
-        x = F.interpolate(input=x, size=(512, 512), mode="bilinear", align_corners=True)
+        x = torch.stack(x).to("cuda")
+        # print("*"*50)
+        # print(x.shape)
+        x = F.interpolate(input=x[0], size=(512, 512), mode="bilinear", align_corners=True)
         return x
 
 
