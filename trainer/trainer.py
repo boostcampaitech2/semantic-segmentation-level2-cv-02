@@ -78,6 +78,11 @@ class Trainer(BaseTrainer):
                 with torch.cuda.amp.autocast(enabled=True):
                     # inference
                     output = self.model(data)
+                    # output = torch.argmax(output, dim=1)
+                    # print(output)
+                    # target = target.float()
+                    # print(output.size())
+                    # print(target.size())
                     # loss
                     loss = self.criterion(output, target)
 
