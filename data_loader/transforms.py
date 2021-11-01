@@ -20,6 +20,7 @@ from albumentations import (
     CLAHE,
     RandomBrightnessContrast,
     RandomGamma,
+    Rotate,
     HueSaturationValue,
     RGBShift,
     RandomBrightness,
@@ -32,6 +33,7 @@ from albumentations import (
     GridDropout,  # GridMask
     ChannelShuffle,
     CoarseDropout,  # Cutout
+    ColorJitter
 )
 from albumentations.augmentations.crops.transforms import CropNonEmptyMaskIfExists
 
@@ -49,6 +51,7 @@ def Elastic_Transform():
 def BasicTransform():
     return A.Compose(
         [
+            Resize(512, 512),
             ToTensorV2(),
         ]
     )
@@ -63,3 +66,29 @@ def CustomTransform():
             ToTensorV2(),
         ]
     )
+
+def HardTransform():
+    return A.Compose([
+        Resize(512, 512),
+        RandomRotate90(),
+        HorizontalFlip(),
+        VerticalFlip(),
+        Transpose(),
+        GridDropout(ratio=0.2, holes_number_x=5, holes_number_y=5, random_offset=True, p=0.5),
+        # GaussNoise(),
+        Rotate(),
+        RandomBrightnessContrast(),
+        ToTensorV2()
+    ])
+
+def CutmixHardTransform():
+    return A.Compose([
+        Resize(512, 512),
+        RandomRotate90(),
+        HorizontalFlip(),
+        VerticalFlip(),
+        Transpose(),
+        Rotate(),
+        RandomBrightnessContrast(),
+        ToTensorV2()
+    ])

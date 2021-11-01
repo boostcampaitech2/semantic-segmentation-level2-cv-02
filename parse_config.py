@@ -125,9 +125,14 @@ class ConfigParser:
 
     def _get_dataset(self, module_args, *args, **kwargs):
         arg_name = module_args["dataset"]["type"]
-        arg_args = dict(module_args["dataset"]["args"])
-        if "transform" in arg_args:
-            arg_args["transform"] = self._get_transform(arg_args, *args, **kwargs)
+        if arg_name == "ConcatDataset":
+            arg_args = {"datasets": []}
+            for sub_args in module_args["dataset"]["args"]:
+                arg_args["datasets"].append(self._get_dataset(sub_args, *args, **kwargs))
+        else:
+            arg_args = dict(module_args["dataset"]["args"])
+            if "transform" in arg_args:
+                arg_args["transform"] = self._get_transform(arg_args, *args, **kwargs)
         return getattr(Datasets, arg_name)(*args, **arg_args)
 
     def _get_transform(self, module_args, *args, **kwargs):
