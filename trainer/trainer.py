@@ -84,6 +84,7 @@ class Trainer(BaseTrainer):
                     # print(output.size())
                     # print(target.size())
                     # loss
+                    # if self.criterion != ""
                     loss = self.criterion(output, target)
 
                 scaler.scale(loss).backward()
@@ -94,6 +95,8 @@ class Trainer(BaseTrainer):
                 output = self.model(data)
                 # loss
                 loss = self.criterion(output, target)
+                # loss.forward(output, target)
+                print("####", loss)
                 loss.backward()
                 self.optimizer.step()
 

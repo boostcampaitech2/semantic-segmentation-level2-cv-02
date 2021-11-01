@@ -145,46 +145,9 @@ def lovasz_softmax(probas, labels, classes="present", per_image=True, ignore=Non
 
 
 # IOU Loss
-import torch
-
-
-def _iou(pred, target, size_average=True):
-
-    b = pred.shape[0]
-    IoU = 0.0
-    for i in range(0, b):
-        # compute the IoU of the foreground
-        Iand1 = torch.sum(target[i, :, :, :] * pred[i, :, :, :])
-        Ior1 = torch.sum(target[i, :, :, :]) + torch.sum(pred[i, :, :, :]) - Iand1
-        IoU1 = Iand1 / Ior1
-
-        # IoU loss is (1-IoU1)
-        IoU = IoU + (1 - IoU1)
-
-    return IoU / b
-
-
-class IOU(torch.nn.Module):
-    def __init__(self, size_average=True):
-        super(IOU, self).__init__()
-        self.size_average = size_average
-
-    def forward(self, pred, target):
-
-        return _iou(pred, target, self.size_average)
-
-
-def IOU_loss(pred, label):
-    iou_loss = IOU(size_average=True)
-    iou_out = iou_loss(pred, label)
-    print("iou_loss:", iou_out.data.cpu().numpy())
-    return iou_out
-
-
-# solutuion
-class DiceCELoss(nn.Module):
+class IoULoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
-        super(DiceCELoss, self).__init__()
+        super(IoULoss, self).__init__()
 
     def forward(self, inputs, targets, smooth=1):
         # flatten label and prediction tensors
@@ -198,9 +161,47 @@ class DiceCELoss(nn.Module):
         dims = (0,) + tuple(range(2, targets.ndimension()))
         intersection = torch.sum(probas * true_1_hot, dims)
         cardinality = torch.sum(probas + true_1_hot, dims)
+        union = cardinality - intersection
+
+        IoU = ((intersection + smooth) / (union + smooth)).mean()
+        return 1 - IoU
+
+
+def IOU_Loss(inputs, targets):
+    return IoULoss()(inputs, targets)
+
+
+# solutuion
+
+
+class DiceCELoss(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(DiceCELoss, self).__init__()
+
+    def forward(self, inputs, targets, smooth=1):
+        print("ert")
+        # flatten label and prediction tensors
+        num_classes = inputs.size(1)
+        true_1_hot = torch.eye(num_classes)[targets]
+        print("#######1")
+        true_1_hot = true_1_hot.permute(0, 3, 1, 2).float()
+        probas = F.softmax(inputs, dim=1)
+        # probas = nn.CrossEntropyLoss()(inputs, targets)
+        print("#######2")
+
+        true_1_hot = true_1_hot.type(inputs.type())
+        dims = (0,) + tuple(range(2, targets.ndimension()))
+        intersection = torch.sum(probas * true_1_hot, dims)
+        cardinality = torch.sum(probas + true_1_hot, dims)
         dice_loss = (2.0 * intersection / (cardinality + 1e-7)).mean()
         dice_loss = 1 - dice_loss
+        print("#######3")
 
         ce = F.cross_entropy(inputs, targets, reduction="mean")
         dice_bce = ce * 0.75 + dice_loss * 0.25
+        print("############", type(dice_bce))
         return dice_bce
+
+
+def DiceCE_Loss(inputs, targets):
+    return DiceCELoss()(inputs, targets)
