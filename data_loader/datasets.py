@@ -1,5 +1,5 @@
 from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset as Dset, DataLoader, ConcatDataset as ConcatDset
 import cv2
 import numpy as np
 from pycocotools.coco import COCO
@@ -31,9 +31,9 @@ def get_classname(classID, cats):
     return "None"
 
 
-class BasicDataset(Dataset):
+class BasicDataset(Dset):
     """
-    Thrash Dataset
+    Thrash Dset
     """
 
     def __init__(self, data_dir, ann_file, mode="train", transform=None):
@@ -92,9 +92,9 @@ class BasicDataset(Dataset):
         return len(self.coco.getImgIds())
 
 
-class ResizedBasicDataset(Dataset):
+class ResizedBasicDataset(Dset):
     """
-    Thrash Dataset
+    Thrash Dset
     """
 
     def __init__(self, data_dir="../input/resized_data_256", mode="train", transform=None):
@@ -132,3 +132,7 @@ class ResizedBasicDataset(Dataset):
         # return 3272
         return len(self.file_names)
         # return len(self.coco.getImgIds())
+
+
+def ConcatDataset(datasets):
+    return ConcatDset(datasets=datasets)
