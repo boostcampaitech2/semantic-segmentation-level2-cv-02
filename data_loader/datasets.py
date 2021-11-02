@@ -66,7 +66,9 @@ class BasicDataset(Dset):
             # Background = 0
             masks = np.zeros((image_infos["height"], image_infos["width"]))
             # General trash = 1, ... , Cigarette = 10
-            anns = sorted(anns, key=lambda idx: len(idx["segmentation"][0]), reverse=False)
+            # anns = sorted(anns, key=lambda idx: len(idx["segmentation"][0]), reverse=False)
+            anns = sorted(anns, key=lambda idx: idx["id"], reverse=True)  # sort for obj_cutmix mask
+
             for i in range(len(anns)):
                 className = get_classname(anns[i]["category_id"], cats)
                 pixel_value = category_names.index(className)
