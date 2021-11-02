@@ -107,7 +107,6 @@ def main(config):
             probs = F.softmax(output, dim=1).detach().cpu().numpy()
             pool = mp.Pool(mp.cpu_count())
             images = torch.stack(data).detach().cpu().numpy().astype(np.uint8).transpose(0, 2, 3, 1)
-            print("###########")
             if images.shape[1] != tar_size or images.shape[2] != tar_size:
                 images = np.stack([resize(image=im)["image"] for im in images], axis=0)
 
