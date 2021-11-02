@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import webcolors
 
-submission_path = "./saved/models/Segmentation/1025_082746/ocr_hr18_submission.csv"
+submission_path = (
+    "/opt/ml/segmentation/semantic-segmentation-level2-cv-02/saved/models/HRNet_ratio91/1027_173022/submission.csv"
+)
 root = "../input/data/"
 
 class_colormap = [
