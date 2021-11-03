@@ -45,8 +45,8 @@ for img_idx in range(num_of_images):
 
     for i, predictedClass in enumerate(arr_predictedStrings):
         if predictedClass != "0":  # background 0이 아닌 경우
-            x = i // 256  # x 좌표
-            y = i % 256  # y 좌표
+            x = i // size  # x 좌표
+            y = i % size  # y 좌표
             tmp_anno[int(predictedClass)].extend([x, y])
 
     for i in range(1, num_classes + 1):
