@@ -28,7 +28,7 @@ num_of_images = len(submission["PredictionString"])  # 819
 image_ids = submission["image_id"][:]
 predictedStrings = submission["PredictionString"][:]
 
-size = 256
+size = 512
 
 poses = [[0 for _ in range(size)] for _ in range(size)]
 
