@@ -78,5 +78,17 @@
         "entity": "boostcamp-2th-cv-02team",
         "project": "semantic-segmentation-recycling-trash",
         "unique_tag": ""
-    }
+    }, 
+    "categories": ["Backgroud",
+        "General_trash",
+        "Paper",
+        "Paper_pack",
+        "Metal",
+        "Glass",
+        "Plastic",
+        "Styrofoam",
+        "Plastic_bag",
+        "Battery",
+        "Clothing"]
+    
 }

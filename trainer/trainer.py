@@ -41,6 +41,7 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
         self.use_amp = self.config["trainer"]["use_amp"]
+        self.categories = self.config["categories"]
 
         self.train_metrics = MetricTracker(
             *["train/loss", "train/acc", "train/mIoU", "charts/learning_rate"],
@@ -48,7 +49,10 @@ class Trainer(BaseTrainer):
             writer=self.writer,
         )
         self.valid_metrics = MetricTracker(
-            *["valid/loss", "valid/acc", "valid/mIoU"], *[m.__name__ for m in self.metric_ftns], writer=self.writer
+            *["valid/loss", "valid/acc", "valid/mIoU"],
+            *[f"valid/{categorie}" for categorie in self.categories],
+            *[m.__name__ for m in self.metric_ftns],
+            writer=self.writer,
         )
 
     def _train_epoch(self, epoch):
@@ -120,8 +124,12 @@ class Trainer(BaseTrainer):
             val_log = self._valid_epoch(epoch)
             log.update(**{k: v for k, v in val_log.items()})
         if self.lr_scheduler is not None:
-            log.update(**{"charts/learning_rate": self.lr_scheduler.get_last_lr()[0]})
-            self.lr_scheduler.step()
+            if isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                log.update(**{"charts/learning_rate": self.optimizer.param_groups[0]["lr"]})
+                self.lr_scheduler.step(log["valid/mIoU"])
+            else:
+                log.update(**{"charts/learning_rate": self.lr_scheduler.get_last_lr()[0]})
+                self.lr_scheduler.step()
         return log
 
     def _valid_epoch(self, epoch):
@@ -156,13 +164,22 @@ class Trainer(BaseTrainer):
 
                 hist = add_hist(hist, target, output, n_class=n_class)
 
+            # Wandb Error
             self.wandb.show_images_wandb(data[:30], target[:30], output[:30])
             acc, acc_cls, mIoU, fwavacc, IoU = label_accuracy_score(hist)
             avrg_loss = total_loss / cnt
+            IoU_by_class = [(classes, round(IoU, 4)) for IoU, classes in zip(IoU, self.categories)]
+            print(
+                f"Validation #{epoch}  Average Loss: {round(avrg_loss.item(), 4)}, Accuracy : {round(acc, 4)}, \
+                    mIoU: {round(mIoU, 4)}"
+            )
+            print(f"IoU by class : {IoU_by_class}")
 
             self.valid_metrics.update("valid/acc", acc)
             self.valid_metrics.update("valid/mIoU", mIoU)
             self.valid_metrics.update("valid/loss", avrg_loss.item())
+            for key, value in IoU_by_class:
+                self.valid_metrics.update(f"valid/{key}", value)
 
             print(
                 f"Validation #{epoch}  Average Loss: {round(avrg_loss.item(), 4)}, Accuracy : {round(acc, 4)}, mIoU: {round(mIoU, 4)}"
