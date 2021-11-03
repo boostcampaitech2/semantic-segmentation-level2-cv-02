@@ -16,6 +16,7 @@ parser.add_argument(
 parser.add_argument(
     "--save_file", default="/opt/ml/segmentation/input/data/pseudo.json", type=str, help="Path to output file"
 )
+parser.add_argument("--min_area", default=10000, type=int, help="min length of segmentation list")
 args = parser.parse_args()
 
 
@@ -64,7 +65,7 @@ for img_idx in range(num_of_images):
             tmp_anno[int(predictedClass)].extend([x, y])
 
     for i in range(1, num_classes + 1):
-        if len(tmp_anno[i]) > 20:  # 적어도 10 pix 초과인 경우만 추가
+        if len(tmp_anno[i]) > args.min_area:
             tmp_dict = {
                 "id": anno_idx,
                 "image_id": img_idx,
