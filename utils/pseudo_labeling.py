@@ -64,7 +64,7 @@ for img_idx in range(num_of_images):
             tmp_anno[int(predictedClass)].extend([x, y])
 
     for i in range(1, num_classes + 1):
-        if tmp_anno[i]:  # 빈 값이 아니면
+        if len(tmp_anno[i]) > 20:  # 적어도 10 pix 초과인 경우만 추가
             tmp_dict = {
                 "id": anno_idx,
                 "image_id": img_idx,
