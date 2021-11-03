@@ -37,6 +37,20 @@ annotations = []
 num_classes = 11
 anno_idx = 0
 
+# make images key in coco json
+images = []
+for img_idx in range(num_of_images):
+    tmp_dict = {
+        "license": 0,
+        "url": 0,  # null
+        "file_name": image_ids[img_idx],
+        "height": 512,
+        "width": 512,
+        "date_captured": 0,  # null
+        "id": img_idx,
+    }
+    images.append(tmp_dict)
+
 # make annotations key in coco json
 for img_idx in range(num_of_images):
     tmp_anno = [[] for _ in range(num_classes + 1)]  # class에 해당하는 idx에 좌표값 저장하는 배열
@@ -53,7 +67,7 @@ for img_idx in range(num_of_images):
         if tmp_anno[i]:  # 빈 값이 아니면
             tmp_dict = {
                 "id": anno_idx,
-                "image_id": image_ids[img_idx],
+                "image_id": img_idx,
                 "category_id": i,
                 "segmentation": [tmp_anno[i]],
                 "area": 100.0,
@@ -77,20 +91,6 @@ categories = [
     {"id": 9, "name": "Battery", "supercategory": "Battery"},
     {"id": 10, "name": "Clothing", "supercategory": "Clothing"},
 ]
-
-# make images key in coco json
-images = []
-for img_idx in range(num_of_images):
-    tmp_dict = {
-        "license": 0,
-        "url": 0,  # null
-        "file_name": image_ids[img_idx],
-        "height": 512,
-        "width": 512,
-        "date_captured": 0,  # null
-        "id": img_idx,
-    }
-    images.append(tmp_dict)
 
 
 # json 파일로 저장
