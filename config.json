@@ -1,7 +1,7 @@
 {
-    "name": "Base",
+    "name": "DeepLabV3Plus_hoon",
     "n_gpu": 1,
-    "arch": {"type": "BasicModel", "args": {"num_classes": 11}},
+    "arch": {"type": "DeepLabV3Plus", "args": {"num_classes": 11}},
     "kfold": {
         "flag": false,
         "cnt": 5,
@@ -17,12 +17,14 @@
                     "data_dir": "../input/data",
                     "ann_file": "../input/data/train.json",
                     "mode": "train",
-                    "transform": {"type": "BasicTransform", "args": {}}
+                    "transform": {"type": "CutmixHardTransform", "args": {}}
                 }
             },
-            "batch_size": 16,
+            "batch_size": 12,
             "shuffle": true,
-            "num_workers": 6
+            "num_workers": 6,
+            "drop_last": true
+
         }
     },
     "valid_data_loader": {
@@ -37,9 +39,10 @@
                     "transform": {"type": "BasicTransform", "args": {}}
                 }
             },
-            "batch_size": 16,
+            "batch_size": 12,
             "shuffle": false,
-            "num_workers": 6
+            "num_workers": 6,
+            "drop_last": true
         }
     },
     "test_data_loader": {
@@ -60,11 +63,11 @@
         }
     },
     "optimizer": {"type": "Adam", "args": {"lr": 0.001, "weight_decay": 0, "amsgrad": true}},
-    "loss": "CrossEntropyLoss",
+    "loss": "DiceCE_Loss",
     "metrics": [],
     "lr_scheduler": {"type": "CosineAnnealingLR", "args": {"T_max": 10, "eta_min": 0.001}},
     "trainer": {
-        "epochs": 1,
+        "epochs": 100,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
