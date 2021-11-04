@@ -6,7 +6,7 @@ import torch.nn as nn
 # model 불러오기
 # 출력 label 수 정의 (classes=11)
 class DeepLabV3(nn.Module):
-    def __init__(self, encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=3, num_classes=11):
+    def __init__(self, encoder_name="efficientnet-b7", encoder_weights="imagenet", in_channels=3, num_classes=11):
         super(DeepLabV3, self).__init__()
         self.model = smp.DeepLabV3(
             encoder_name=encoder_name,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
@@ -20,7 +20,7 @@ class DeepLabV3(nn.Module):
 
 
 class DeepLabV3Plus(nn.Module):
-    def __init__(self, encoder_name="efficientnet-b0", encoder_weights="imagenet", in_channels=3, num_classes=11):
+    def __init__(self, encoder_name="efficientnet-b7", encoder_weights="imagenet", in_channels=3, num_classes=11):
         super(DeepLabV3Plus, self).__init__()
         self.model = smp.DeepLabV3Plus(
             encoder_name=encoder_name,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
