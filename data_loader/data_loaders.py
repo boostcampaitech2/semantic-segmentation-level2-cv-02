@@ -21,18 +21,20 @@ class BasicDataLoader(DataLoader):
     Thrash DataLoader
     """
 
-    def __init__(self, dataset, batch_size, shuffle=False, num_workers=4, collate_fn=collate_fn):
+    def __init__(self, dataset, batch_size, shuffle=False, num_workers=4, collate_fn=collate_fn, drop_last=False):
         self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.num_workers = num_workers
         self.collate_fn = collate_fn
+        self.drop_last = drop_last
         super().__init__(
             dataset=self.dataset,
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            drop_last=self.drop_last,
         )
 
 

@@ -112,7 +112,9 @@ def main(config):
 
             final_probs += np.array(pool.map(dense_crf_wrapper, zip(images, probs)))
             pool.close()
-            oms = np.argmax(final_probs.squeeze(), axis=1)
+            # oms = np.argmax(final_probs.squeeze(), axis=1)
+            oms = final_probs
+
             # oms = torch.argmax(output.squeeze(), dim=1).detach().cpu().numpy()
             temp_mask = []
             for d, mask in zip(np.stack(data), oms):
