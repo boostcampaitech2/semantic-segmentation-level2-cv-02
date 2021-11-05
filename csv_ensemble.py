@@ -26,7 +26,6 @@ if __name__ == "__main__":
     submission_path.append(saved_models + "output17.csv")  #
 
     root = "../input/data/"
-    # submission = pd.read_csv(submission_path[i], index_col=None)[index : index + num_examples]
     image_ids = []
     masks = []
     submission = pd.read_csv("./sample_submission.csv", index_col=None)
@@ -39,14 +38,12 @@ if __name__ == "__main__":
         print(LE, "LE", i)
         for j in range(LE):
             mas.append(list(map(int, mas2[j].split())))
-        # masks.append(list(map(int,read_submission["PredictionString"].str.split()[0])))
         masks.append(mas)
     image_ids = list(read_submission["image_id"].values)
     image_ids = np.array(image_ids)
     # print(image_ids)
     masks = np.array(masks)
-    # T_masks = copy.deepcopy(masks.T)
-    # print(len(masks[0]) == len(image_ids))
+    
     for j in range(len(image_ids)):
         image_id = image_ids[j]
         ensemble = []
