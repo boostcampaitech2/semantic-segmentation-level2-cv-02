@@ -7,6 +7,7 @@ Code for 20th place solution in Boostcamp AI Tech Recycle Trash Semantic Segment
 - [대회 개요](#Overview)<br>
 - [문제 정의 해결 및 방법](#Solution)<br>
 - [CODE 설명](#Code)<br>
+- [Demo 결과](#Demo)
 
 <br></br>
 ## 👋 팀 소개 <a name = 'Team'></a>
@@ -157,8 +158,14 @@ submission.csv 경로 추가 후
 python csv_ensemble.py
 ```
 
+<br></br>
+## 👀 DEMO 결과<a name = 'Demo'></a>
+Backbone : EfficientNet-b4  
+Segmentation Head : UNet++  
+| Original Image | Ground Truth | Predicted Image |
+|:--------------:|:--------------:|:--------------:| 
+|<a><img src = 'https://user-images.githubusercontent.com/43367868/140676444-6d618757-5eb8-4261-8477-1edbd0e74ae6.png' width ='200px' ></a>|<a><img src = 'https://user-images.githubusercontent.com/43367868/140676804-942640cf-df49-4ffe-b220-28f4c17f7b3e.png' width ='200px' ></a>|<a><img src = 'https://user-images.githubusercontent.com/43367868/140676912-acd44bf1-93fd-4c07-89b7-642d1c8e87f0.png' width ='200px' ></a>|
+|<a><img src = 'https://user-images.githubusercontent.com/43367868/140677109-23493624-2fc1-45e0-bfe2-b4a5c2aa57f8.png' width ='200px' ></a>|<a><img src = 'https://user-images.githubusercontent.com/43367868/140677216-1043ab83-4286-492c-a12d-e8e390b929dd.png' width ='200px' ></a>|<a><img src = 'https://user-images.githubusercontent.com/43367868/140677164-6fd04b07-8461-4f0c-b2cc-a3fc73059668.png' width ='200px' ></a>|
 
 
-
-
-
+data license : Naver Boostcamp AI Tech 대회교육용 재활용 쓰레기 데이터셋. CC BY 2.0
